@@ -1,0 +1,69 @@
+/*!
+ * KinoPub v0.1 (https://github.com/ctepeo/KinoPub/)
+ * Copyright 2011-2016 Egor "ctepeo" Sazanovich.
+ * Licensed under GPL-3.0 (https://github.com/ctepeo/KinoPub/blob/master/LICENSE)
+ */
+
+$icon-font-path: "fonts/";
+$web-font-path: "";
+$font-size-base: 21px!default;
+$bower_path: "./lib/bower_components/";
+@import "../../lib/bower_components/bootswatch/darkly/_variables";
+@import "bootstrap";
+@import "font-awesome";
+@import "../../lib/bower_components/bootswatch/darkly/_bootswatch";
+//@import "../../lib/caph/3.1.0/caph.min.css";
+@import "../../lib/bower_components/font-awesome-animation/dist/font-awesome-animation.min.css";
+
+/* Helpers */
+
+$fonts-list: ("Regular", "normal", "normal"),
+("Light", 300, "normal"),
+("LightItalic", 300, "italic"),
+("Bold", "bold", "normal"),
+("BoldItalic", "bold", "italic"),
+("Italic", "normal", "italic"),
+("Regular", 400, "normal");
+
+@each $name, $weight,$style in $fonts-list {
+    $filepath: "../fonts/Lato/Lato-"+$name;
+    @font-face {
+        font-family: 'Lato';
+        src: url($filepath + ".eot");
+        src: url($filepath + ".eot?#iefix") format('embedded-opentype'),
+            url($filepath + ".woff") format('woff'),
+            url($filepath + ".woff2") format('woff2'),
+            url($filepath + ".ttf")  format('truetype'),
+            url($filepath + ".svg#Lato") format('svg');
+        font-style:  $style;
+        font-weight: $weight;
+    }
+}
+
+$direction-list: ("b","bottom"),
+("t","top"),
+("l","left"),
+("r","right");
+
+$params-list: ("m","margin"),("p","padding");
+$params-values: 0 5 10 20 30 40 50;
+
+@each $param-prefix,$param-name in $params-list {
+    @each $class-prefix,$class-value in $direction-list {
+        @each $param-value in $params-values{
+            .#{$param-prefix}#{$class-prefix}#{$param-value} {
+                #{$param-name}-#{$class-value}: #{$param-value}px!important;
+            }
+        }
+    }
+}
+
+@each $param-prefix,$param-name in $params-list {
+    @each $class-prefix,$class-value in $direction-list {
+        @each $param-value in $params-values{
+            .#{$param-prefix}#{$param-value} {
+                #{$param-name}: #{$param-value}px!important;
+            }
+        }
+    }
+}

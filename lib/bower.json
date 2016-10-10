@@ -1,0 +1,17 @@
+{
+  "name": "kinopubtv-libs",
+  "homepage": "https://github.com/ctepeo/KinoPubTV",
+  "authors": [
+    "Egor Sazanovich <egor@prodev.io>"
+  ],
+  "description": "WebApp libs",
+  "main": "",
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}

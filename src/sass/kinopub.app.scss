@@ -1,0 +1,128 @@
+/*!
+ * KinoPub v0.1 (https://github.com/ctepeo/KinoPub/)
+ * Copyright 2011-2016 Egor "ctepeo" Sazanovich.
+ * Licensed under GPL-3.0 (https://github.com/ctepeo/KinoPub/blob/master/LICENSE)
+ */
+
+@import "../../lib/bower_components/bootswatch/darkly/_variables";
+@import "kinopub.colors";
+
+html {
+    min-height: 100%;
+}
+
+body {
+    padding: 0px;
+    margin: 0px;
+    height: 100%;
+    background-color: $color-gray;
+    font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    &.kp-welcome {
+        background-color: $color-black;
+        > div {
+            @extend .vcenter;
+            @extend .centered;
+            &.kp-logo {
+                opacity: 0;
+                h2 {
+                    font-weight: 800;
+                    text-transform: uppercase;
+                    color: $color-white;
+                    font-size: 8em;
+                    span {
+                        color: $color-blue-light;
+                    }
+                }
+            }
+            &.kp-status {
+                margin-top: 5%;
+                width: 60%;
+                color: $color-white;
+                text-align: center;
+                i {
+                    font-size: 4em;
+                }
+            }
+        }
+    }
+    &.kp-blurred {
+        > * {
+            @extend .blurred;
+        }
+    }
+    /* lightbox */
+    #kp-device-activation {
+        background-color: rgba($color-black, 0.7);
+        position: fixed;
+        left: 0px;
+        top: 0px;
+        z-index: 9999;
+        width: 100%;
+        transform: none!important;
+        -webkit-filter: none;
+        .kp-device-activation-container {
+            @extend .vcenter;
+            @extend .centered;
+            width: 90%;
+            padding: 2%;
+            text-align: center;
+            // header
+            h3 {
+                font-size: 2em;
+                font-weight: 800;
+                margin: 0px;
+                color: $color-white;
+            }
+            .kp-device-activation-code {
+                // code
+                h1 {
+                    color: $color-orange;
+                    font-weight: 800;
+                    font-size: 9em;
+                    margin: 0px;
+                    margin-bottom: 1%;
+                    cursor: pointer;
+                }
+                // description
+                span {
+                    float: left;
+                    width: 100%;
+                }
+                // verification URI
+                strong {
+                    float: left;
+                    width: 100%;
+                    color: $color-orange;
+                    cursor: pointer;
+                }
+                // progress bar
+                .kp-device-activation-bar {
+                    .progress {
+                        height: 1px;
+                    }
+                }
+                // loader
+                .kp-loader {
+                    font-size: 5em;
+                    margin-top: 3%;
+                }
+            }
+        }
+    }
+    /* helpers */
+    .vcenter {
+        display: inline-block;
+        vertical-align: middle;
+        float: none;
+    }
+    .centered {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
+    .blurred {
+        -webkit-filter: blur(15px);
+        -webkit-transition: -webkit-filter 1s;
+    }
+}

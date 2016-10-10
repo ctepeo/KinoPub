@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<widget xmlns:tizen="http://tizen.org/ns/widgets" xmlns="http://www.w3.org/ns/widgets" id="https://github.com/ctepeo/KinoPub" version="0.0.1" viewmodes="maximized">
+    <access origin="*" subdomains="true"></access>
+    <tizen:application id="N5N4M2tiE1.KINOPUB" package="N5N4M2tiE1" required_version="2.4"/>
+    <author href="https://github.com/ctepeo/KinoPub" email="egor@prodev.io">Egor Sazanovich (ctepeo)</author>
+    <content src="index.html"/>
+    <description>Tizen Web App for kino.pub TV. https://github.com/ctepeo/KinoPub
+    </description>
+    <feature name="http://tizen.org/feature/screen.size.normal.1080.1920"/>
+    <icon src="app-icon.png" height="200" width="200"/>
+    <license href="https://github.com/ctepeo/KinoPub/blob/master/LICENSE">GPL-3.0</license>
+    <tizen:metadata key="http://samsung.com/tv/metadata/prelaunch.support" value="true"/>
+    <name>KinoPub</name>
+    <tizen:privilege name="http://tizen.org/privilege/application.launch"/>
+    <tizen:privilege name="http://tizen.org/privilege/filesystem.write"/>
+    <tizen:privilege name="http://tizen.org/privilege/download"/>
+    <tizen:privilege name="http://tizen.org/privilege/websetting"/>
+    <tizen:privilege name="http://tizen.org/privilege/filesystem.read"/>
+    <tizen:privilege name="http://tizen.org/privilege/internet"/>
+    <tizen:privilege name="http://tizen.org/privilege/tv.inputdevice"/>
+    <tizen:privilege name="http://developer.samsung.com/privilege/widgetdata"/>
+    <tizen:privilege name="http://tizen.org/privilege/application.info"/>
+    <tizen:privilege name="http://developer.samsung.com/privilege/productinfo"/>
+    <tizen:profile name="tv-samsung-public"/>
+    <tizen:setting screen-orientation="landscape" context-menu="enable" background-support="disable" encryption="disable" install-location="auto" hwkey-event="enable"/>
+</widget>

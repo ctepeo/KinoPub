@@ -1,0 +1,9 @@
+.settings
+.sign
+.sdk_delta.info
+lib/.sass-cache
+.DS_Store
+.build
+nbproject
+*.sublime*
+*netbeans*
