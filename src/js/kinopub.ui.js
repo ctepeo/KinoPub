@@ -7,6 +7,7 @@
  * ======================================================================== */
 
 kp.ui = {
+    _duration: 10,
     _init: function() {
         this._welcome();
     },
@@ -14,10 +15,10 @@ kp.ui = {
         var _this = this;
         _this._reset();
         jQuery("body").addClass("kp-welcome").html("<div class=\"kp-logo\"><h2>kino<span>pub</span></h2></div>");
-        jQuery(".kp-logo").animate({ opacity: 1 }, 150).promise().then(function() {
+        jQuery(".kp-logo").animate({ opacity: 1 }, 15 * _this._duration).promise().then(function() {
             if (!kp.auth.checkAccessToken()) {
                 // move upper to provide space for status informer
-                jQuery(".kp-logo").animate({ marginTop: '-10%' }, 100).promise().then(function() {
+                jQuery(".kp-logo").animate({ marginTop: '-10%' }, 10 * _this._duration).promise().then(function() {
                     jQuery("<div class=\"kp-status\"></div>").insertAfter(".kp-logo");
                     _this.setLoader(jQuery(".kp-status"));
                 });
@@ -60,11 +61,12 @@ kp.ui = {
         kp.log.add("UI > Скрываем интерфейс активации");
         jQuery("body").removeClass("kp-blurred");
         jQuery("#kp-device-activation").remove();
+        var _this = this;
         if (jQuery("body").hasClass("kp-welcome") == true) {
             // init screen!
             jQuery(".kp-welcome .kp-logo").animate({
                 marginTop: '0%'
-            }, 1000).promise().then(function() {
+            }, 10 * _this._duration).promise().then(function() {
                 jQuery(".kp-logo").animate({
                     opacity: 0
                 }).promise().then(function() {
@@ -72,11 +74,32 @@ kp.ui = {
                     jQuery(".kp-logo").remove();
                     jQuery("body").animate({
                         backgroundColor: '#2f373e'
-                    }, 700).promise().then(function() {
+                    }, 7 * _this._duration).promise().then(function() {
                         jQuery("body").removeClass("kp-welcome");
                         jQuery(".kp-logo, .kp-status").remove();
+                        kp.ui.drawLayout();
+                        kp.modules.transferControl('ui', 'homepage');
                     });
                 });
+            });
+        }
+    },
+    // load html content from module/template to target block
+    load: function(path, callback) {
+        jQuery.ajax({
+            method: "GET",
+            url: kp.appPath + path + ".html"
+        }).done(function(response) {
+            callback(response);
+        }).fail(function(jqXHR, textStatus, errorThrown) {
+            kp.log.add("UI > Load > " + path + " (->" + target + ") >  Ошибочка! " + textStatus);
+        });
+    },
+    drawLayout: function() {
+        if (!jQuery(".kp-header").length) {
+            // build very basics
+            kp.ui.load("ui/_header", function(response) {
+                jQuery("body").html(response);
             });
         }
     },
@@ -90,10 +113,9 @@ kp.ui = {
                 kp.device.registerEvent("#kp-device-activation .kp-device-activation-code h1", "dblclick", function() {
                     kp.api.getDeviceCode();
                 });
-                kp.device.registerEvent("#kp-device-activation .kp-device-activation-code strong", "click", function(el) {
-                    jQuery("body").append("<form class=\"kp-device-activation-tmp-form\" action=\"" + jQuery(el.target).text() + "\" target=\"_blank\"></form>");
-                    jQuery("form.kp-device-activation-tmp-form").submit().remove();
-                });
+                break;
+            case 'homepage':
+                kp.api.getUnwatched();
                 break;
             default:
                 kp.log.add("UI > onGetControl > Неизвестный тип [" + type + "]");

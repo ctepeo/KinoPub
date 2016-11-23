@@ -5,19 +5,20 @@
  * Copyright 2011-2016 Egor "ctepeo" Sazanovich.
  * Licensed under GPL-3.0 (https://github.com/ctepeo/KinoPub/blob/master/LICENSE)
  * ======================================================================== */
-
 var kp = {
     dev: true,
     version: 0.1,
+    appPath: "./kinopub-app/",
     _init: function() {
         kp.modules._init();
     }
 };
-
 kp.boot = {
     _init: function() {
         if (!kp.data.storage.device.name) {
-            kp.data.store('device', { name: lang('device_default_name') });
+            kp.data.store('device', {
+                name: (window.tizen === undefined) ? lang('device_default_webapp_name') : lang('device_default_tizenapp_name')
+            });
         }
         if (!kp.auth.isAuthorized()) {
             kp.ui.deviceActivation();
@@ -36,7 +37,6 @@ kp.boot = {
 jQuery(document).ready(function() {
     kp._init();
 });
-
 /* global helpers */
 function isInt(value) {
     return !isNaN(value) && (function(x) {

@@ -1,9 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<widget xmlns:tizen="http://tizen.org/ns/widgets" xmlns="http://www.w3.org/ns/widgets" id="https://github.com/ctepeo/KinoPub" version="0.0.1" viewmodes="maximized">
-    <access origin="*" subdomains="true"></access>
+<widget xmlns="http://www.w3.org/ns/widgets" xmlns:tizen="http://tizen.org/ns/widgets" id="https://github.com/ctepeo/KinoPub" version="0.0.1" viewmodes="maximized">
+    <access origin="*" subdomains="true"/>
+    <tizen:allow-navigation>*</tizen:allow-navigation>
     <tizen:application id="N5N4M2tiE1.KINOPUB" package="N5N4M2tiE1" required_version="2.4"/>
     <author href="https://github.com/ctepeo/KinoPub" email="egor@prodev.io">Egor Sazanovich (ctepeo)</author>
     <content src="index.html"/>
+    <tizen:content-security-policy>*</tizen:content-security-policy>
+    <tizen:content-security-policy-report-only>*</tizen:content-security-policy-report-only>
     <description>Tizen Web App for kino.pub TV. https://github.com/ctepeo/KinoPub
     </description>
     <feature name="http://tizen.org/feature/screen.size.normal.1080.1920"/>

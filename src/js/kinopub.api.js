@@ -69,9 +69,9 @@ kp.api = {
             method: "POST",
             url: kp.api.apiHostUrl + "device/notify?access_token=" + kp.data.storage.token.access_token,
             data: {
-                title: (window.tizen === undefined) ? lang('device_default_webapp_name') + " @ " + window.location : kp.data.storage.device.name,
+                title: (window.tizen === undefined) ? lang('device_default_webapp_name') + " @ " + window.location : (kp.data.storage.device.name ? kp.data.storage.device.name : lang('device_default_tizenapp_name')),
                 hardware: (window.tizen === undefined) ? lang('device_default_webapp_detailed_name') + " v. " + kp.version : "OS v." + webapis.tvinfo.getVersion(),
-                software: (window.tizen === undefined) ? lang('device_default_name') : "KinoPub v." + tizen.application.getAppInfo().version
+                software: (window.tizen === undefined) ? lang('device_default_webapp_name') : "KinoPub v." + tizen.application.getAppInfo().version
             }
         }).done(function(response) {
 
@@ -103,14 +103,14 @@ kp.api = {
         }).fail(function(jqXHR, textStatus, errorThrown) {
             if (jqXHR.responseJSON.status != 401) {
                 kp.log.add("API > updateAccessToken > Ошибочка! " + textStatus);
+                if (jqXHR.responseJSON.error == "authorization_expired") {
+                    kp.data.wipe();
+                }
                 kp.log.add(jqXHR.responseJSON.error);
                 kp.log.add(jqXHR.responseJSON.error_description);
 
             }
-            kp.data.remove('token', kp.data.boot.token);
             kp.ui.deviceActivation();
-
-
         });
     },
     getUser: function() {
@@ -136,7 +136,43 @@ kp.api = {
                 username: response.username
             });
         }).fail(function(jqXHR, textStatus, errorThrown) {
-            kp.log.add("API > updateAccessToken > Ошибочка! " + textStatus);
+            kp.log.add("API > getUser > Ошибочка! " + textStatus);
+        });
+    },
+    getUnwatched: function(){
+        var _this = this;
+        //_this.getUnwatchedFilms();
+        _this.getUnwatchedSerials();
+    },
+    getUnwatchedFilms: function() {
+        //https://api.service-kp.com/v1/watching/movies
+        kp.log.add("API > getUnwatched > Films > Получаем фильмы к просмотру");
+        jQuery.ajax({
+            method: "GET",
+            url: kp.api.apiHostUrl + "watching/movies?access_token=" + kp.data.storage.token.access_token,
+        }).done(function(response) {
+            if (response.status != 200) {
+                kp.log.add("API > getUser > Status Error " + response.status);
+                return;
+            }
+            console.log(response);
+        }).fail(function(jqXHR, textStatus, errorThrown) {
+            kp.log.add("API > getUnwatched > Ошибочка! " + textStatus);
+        });
+    },
+    getUnwatchedSerials: function() {
+        kp.log.add("API > getUnwatched > Serials > Получаем сериалы к просмотру");
+        jQuery.ajax({
+            method: "GET",
+            url: kp.api.apiHostUrl + "watching/serials?access_token=" + kp.data.storage.token.access_token,
+        }).done(function(response) {
+            if (response.status != 200) {
+                kp.log.add("API > getUser > Status Error " + response.status);
+                return;
+            }
+            console.log(response);
+        }).fail(function(jqXHR, textStatus, errorThrown) {
+            kp.log.add("API > getUnwatched > Ошибочка! " + textStatus);
         });
     }
 }

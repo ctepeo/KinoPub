@@ -5,7 +5,6 @@
  * Copyright 2011-2016 Egor "ctepeo" Sazanovich.
  * Licensed under GPL-3.0 (https://github.com/ctepeo/KinoPub/blob/master/LICENSE)
  * ======================================================================== */
-
 kp.auth = {
     isAuthorized: function() {
         return this.hasAccessToken();
@@ -15,6 +14,7 @@ kp.auth = {
             kp.log.add("Auth > getDeviceCode > Device код уже есть");
             this.showDeviceCode();
         } else {
+            kp.data.wipe();
             kp.log.add("Auth > getDeviceCode > Получаем новый device код");
             kp.api.getDeviceCode();
         }
@@ -48,8 +48,7 @@ kp.auth = {
         var fields = [];
         for (i in kp.data.storage.device) {
             var name = kp.data.storage.device[i];
-            if (i != "name")
-                fields.push(i);
+            if (i != "name") fields.push(i);
         }
         kp.data.remove('device', fields);
         kp.ui.deviceActivated();
@@ -60,7 +59,6 @@ kp.auth = {
         if (typeof(kp.data.storage.device.intervalProgressBar) == "undefined" || kp.data.storage.device.intervalProgressBar == false) {
             kp.data.storage.device.intervalProgressBar = setInterval('kp.auth.deviceCodeBar();', 300);
         }
-
         if (!jQuery("#kp-device-activation .kp-device-activation-code .kp-device-activation-bar .progress-bar").length) {
             jQuery("#kp-device-activation .kp-device-activation-code .kp-device-activation-bar").html("<div class=\"progress\"><div class=\"progress-bar progress-bar-success progress-bar-striped active\" role=\"progressbar\" aria-valuenow=\"\" aria-valuemin=\"0\" aria-valuemax=\"\"></div></div>");
         }
@@ -69,19 +67,14 @@ kp.auth = {
         progressBar.css({
             width: currentProgress + "%"
         });
-        if (currentProgress < 50)
-            progressBar.removeClass("progress-bar-success progress-bar-danger").addClass("progress-bar-warning");
-        if (currentProgress < 10)
-            progressBar.removeClass("progress-bar-success progress-bar-warning").addClass("progress-bar-danger");
-        if (currentProgress >= 50)
-            progressBar.removeClass("progress-bar-danger progress-bar-warning").addClass("progress-bar-success");
+        if (currentProgress < 50) progressBar.removeClass("progress-bar-success progress-bar-danger").addClass("progress-bar-warning");
+        if (currentProgress < 10) progressBar.removeClass("progress-bar-success progress-bar-warning").addClass("progress-bar-danger");
+        if (currentProgress >= 50) progressBar.removeClass("progress-bar-danger progress-bar-warning").addClass("progress-bar-success");
     },
     // checks is device_code stored locally and it hasn't been expired
     hasDeviceCode: function() {
-        if (typeof(kp.data.storage.device.code) == "undefined" || !kp.data.storage.device.code)
-            return false;
-        if ((jQuery.now() / 1000) > kp.data.storage.device.expire_in || this.deviceCodeExpiresIn() <= 0)
-            return false;
+        if (typeof(kp.data.storage.device.code) == "undefined" || !kp.data.storage.device.code) return false;
+        if ((jQuery.now() / 1000) > kp.data.storage.device.expire_in || this.deviceCodeExpiresIn() <= 0) return false;
         kp.log.add("Auth > hasDeviceCode > Через " + this.deviceCodeExpiresIn() + " секунд девайс токен умрет");
         return true;
     },
@@ -90,23 +83,25 @@ kp.auth = {
         return (parseInt(kp.data.storage.device.expires_in, 10) - parseInt((jQuery.now() / 1000), 10));
     },
     checkAccessToken: function() {
-        kp.log.add("Auth > checkAccessToken >  " + this.accessTokenExpiresIn());
+        kp.log.add("Auth > checkAccessToken > " + this.accessTokenExpiresIn());
         if (!this.hasAccessToken()) {
-            kp.api.updateAccessToken();
+            if (typeof(kp.data.storage.token.access_token) != "undefined" && kp.data.storage.token.access_token != null) {
+                kp.api.updateAccessToken();
+            }
+            return false;
         } else {
             return true;
         }
     },
     // checks is access_token available and hasn't expired
     hasAccessToken: function() {
-        if (typeof(kp.data.storage.token.access_token) == "undefined" || !kp.data.storage.token.access_token)
-            return false;
-        if ((jQuery.now() / 1000) > kp.data.storage.token.expires_in || this.accessTokenExpiresIn() <= 0)
-            return false;
+        if (typeof(kp.data.storage.token.access_token) == "undefined" || !kp.data.storage.token.access_token) return false;
+        if ((jQuery.now() / 1000) > kp.data.storage.token.expires_in || this.accessTokenExpiresIn() <= 0) kp.api.updateAccessToken();
         return true;
     },
     // return seconds to expiry of access_token
     accessTokenExpiresIn: function() {
+        if (typeof(kp.data.storage.token) == "undefined" || typeof(kp.data.storage.token.expires_in) == "undefined" || kp.data.storage.token.expires_in == null) return 0;
         return (parseInt(kp.data.storage.token.expires_in, 10) - parseInt((jQuery.now() / 1000), 10));
     }
 }

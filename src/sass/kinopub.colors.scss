@@ -3,4 +3,8 @@ $color-black: #000000;
 $color-blue: #0c81a2;
 $color-blue-light: #009dc7;
 $color-gray: #2f373e;
+$color-gray-light: lighten($color-gray, 20%);
+$color-gray-lightest: lighten($color-gray, 40%);
+$color-gray-dark: darken($color-gray, 3%);
+$color-gray-darkest: darken($color-gray, 7%);
 $color-orange: orange;

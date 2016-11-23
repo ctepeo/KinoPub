@@ -6,18 +6,18 @@
 
 @import "../../lib/bower_components/bootswatch/darkly/_variables";
 @import "kinopub.colors";
-
 html {
     min-height: 100%;
 }
 
 body {
+    margin: 1%;
     padding: 0px;
-    margin: 0px;
     height: 100%;
     background-color: $color-gray;
     font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
     &.kp-welcome {
+        margin: 0px;
         background-color: $color-black;
         > div {
             @extend .vcenter;
@@ -109,6 +109,124 @@ body {
             }
         }
     }
+    /* Main UI */
+    .kp-header {
+        float: left;
+        width: 100%;
+        .kp-profile {
+            float: left;
+            width: 100%;
+            > * {
+                float: left;
+                width: 100%;
+            }
+            .kp-logo {
+                font-weight: bold;
+                font-size: 2.5em;
+                text-align: left;
+                line-height: 1em;
+                margin-top: 3%;
+                color: $color-white;
+                span {
+                    color: $color-blue-light;
+                }
+            }
+            .kp-userinfo {
+                margin-left: 1%;
+                .kp-userpic {
+                    min-height: 20px;
+                    max-height: 100px;
+                    max-width: 30px;
+                    float: left;
+                }
+                .kp-user-data {
+                    float: left;
+                    margin-left: 2%;
+                    > * {
+                        float: left;
+                        width: 100%;
+                    }
+                    .kp-user-pro-duration {
+                        color: $color-gray-lightest;
+                        font-size: 0.5em;
+                        overflow: hidden;
+                        font-weight: 800;
+                        line-height: 0.5em;
+                        margin-top: 7%;
+                    }
+                    .kp-username {
+                        color: $color-gray-light;
+                        font-size: 0.7em;
+                        font-weight: 800;
+                        line-height: 0.7em;
+                    }
+                }
+                // pro 
+                &.kp-user-pro {
+                    .kp-username {
+                        color: $color-orange;
+                    }
+                    .kp-user-pro-duration {
+                        color: $color-gray-light;
+                    }
+                }
+            }
+        }
+        .kp-top-bar {
+            float: left;
+            width: 100%;
+            height: 100%;
+            min-height: 155px;
+            height: 100px;
+            position: absolute;
+            overflow-x: hidden;
+            top: 0px;
+            .kp-unwatched {
+                width: 10%;
+                float: left;
+                overflow: hidden;
+                position: relative;
+                img {
+                    position: relative;
+                    width: 100%;
+                    opacity: 0.7;
+                    display: block;
+                    margin-left: auto;
+                    margin-right: auto;
+                    @extend .blurred-less;
+                }
+                .kp-unwatched-title {
+                    display: none;
+                    position: absolute;
+                    top: 0px;
+                    font-size: 0.5em;
+                    padding: 7.5%;
+                    width: 100%;
+                    background-color: rgba($color-black, 0.5);
+                }
+                .kp-unwatched-series {
+                    position: absolute;
+                    bottom: 0%;
+                    text-align: center;
+                    left: 0%;
+                    padding: 5%;
+                    background-color: $brand-danger;
+                    color: $color-white;
+                    font-size: 0.7em;
+                    font-weight: bold;
+                }
+                &.kp-unwatched-focus {
+                    img {
+                        opacity: 1;
+                        @extend .blurred-cancel;
+                    }
+                    .kp-unwatched-title {
+                        display: block;
+                    }
+                }
+            }
+        }
+    }
     /* helpers */
     .vcenter {
         display: inline-block;
@@ -124,5 +242,16 @@ body {
     .blurred {
         -webkit-filter: blur(15px);
         -webkit-transition: -webkit-filter 1s;
+    }
+    .blurred-less {
+        -webkit-filter: blur(1px);
+        -webkit-transition: -webkit-filter 1s;
+    }
+    .blurred-cancel {
+        -webkit-filter: blur(0px);
+        -webkit-transition: -webkit-filter 1s;
+    }
+    .shadow {
+        text-shadow: 1px 1px 0px rgba(0, 0, 0, 1);
     }
 }

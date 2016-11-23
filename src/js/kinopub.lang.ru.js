@@ -7,9 +7,9 @@
  * ======================================================================== */
 
 kp.lang.ru = {
-    device_default_name: "Мой TizenTV",
     device_default_webapp_name: "WebApp",
     device_default_webapp_detailed_name: "WebApp by ctepeo",
+    device_default_tizenapp_name: "Мой TizenTV",
     device_activation_header: "Активация устройства",
     device_activation_description: "Введите указанный код на сайте"
 }
