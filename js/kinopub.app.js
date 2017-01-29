@@ -2,7 +2,7 @@
  * KinoPub: kinopub.boot.js v0.1
  * https://github.com/ctepeo/KinoPub/
  * ========================================================================
- * Copyright 2011-2016 Egor "ctepeo" Sazanovich.
+ * Copyright 2011-2017 Egor "ctepeo" Sazanovich.
  * Licensed under GPL-3.0 (https://github.com/ctepeo/KinoPub/blob/master/LICENSE)
  * ======================================================================== */
 var kp = {
@@ -60,7 +60,7 @@ function unix2date(UNIX_timestamp) {
  * KinoPub: kinopub.lang.js v0.1
  * https://github.com/ctepeo/KinoPub/
  * ========================================================================
- * Copyright 2011-2016 Egor "ctepeo" Sazanovich.
+ * Copyright 2011-2017 Egor "ctepeo" Sazanovich.
  * Licensed under GPL-3.0 (https://github.com/ctepeo/KinoPub/blob/master/LICENSE)
  * ======================================================================== */
 
@@ -87,7 +87,7 @@ function lang(string) {
  * KinoPub: kinopub.log.js v0.1
  * https://github.com/ctepeo/KinoPub/
  * ========================================================================
- * Copyright 2011-2016 Egor "ctepeo" Sazanovich.
+ * Copyright 2011-2017 Egor "ctepeo" Sazanovich.
  * Licensed under GPL-3.0 (https://github.com/ctepeo/KinoPub/blob/master/LICENSE)
  * ======================================================================== */
 
@@ -110,7 +110,7 @@ kp.log = {
  * KinoPub: kinopub.data.js v0.1
  * https://github.com/ctepeo/KinoPub/
  * ========================================================================
- * Copyright 2011-2016 Egor "ctepeo" Sazanovich.
+ * Copyright 2011-2017 Egor "ctepeo" Sazanovich.
  * Licensed under GPL-3.0 (https://github.com/ctepeo/KinoPub/blob/master/LICENSE)
  * ======================================================================== */
 kp.data = {
@@ -118,7 +118,8 @@ kp.data = {
     boot: {
         device: ['name', 'code', 'expires_in', 'expiry_interval', 'interval', 'user_code', 'verification_uri'],
         token: ['access_token', 'expires_in', 'expiry_interval', 'refresh_token'],
-        user: ['profile_avatar', 'profile_name', 'reg_date', 'reg_unix', 'subscription_active', 'subscription_days', 'subscription_end_unix', 'subscription_end_date', 'username']
+        user: ['profile_avatar', 'profile_name', 'reg_date', 'reg_unix', 'subscription_active', 'subscription_days', 'subscription_end_unix', 'subscription_end_date', 'username'],
+        history: ['unwatched']
     },
     storage: {},
     _init: function() {
@@ -177,7 +178,7 @@ kp.data = {
  * KinoPub: kinopub.tv.js v0.1
  * https://github.com/ctepeo/KinoPub/
  * ========================================================================
- * Copyright 2011-2016 Egor "ctepeo" Sazanovich.
+ * Copyright 2011-2017 Egor "ctepeo" Sazanovich.
  * Licensed under GPL-3.0 (https://github.com/ctepeo/KinoPub/blob/master/LICENSE)
  * ======================================================================== */
 
@@ -282,10 +283,9 @@ kp.device = {
  * KinoPub: kinopub.api.js v0.1
  * https://github.com/ctepeo/KinoPub/
  * ========================================================================
- * Copyright 2011-2016 Egor "ctepeo" Sazanovich.
+ * Copyright 2011-2017 Egor "ctepeo" Sazanovich.
  * Licensed under GPL-3.0 (https://github.com/ctepeo/KinoPub/blob/master/LICENSE)
  * ======================================================================== */
-
 kp.api = {
     auth: {
         host: "https://api.service-kp.com/oauth2/device",
@@ -353,9 +353,7 @@ kp.api = {
                 hardware: (window.tizen === undefined) ? lang('device_default_webapp_detailed_name') + " v. " + kp.version : "OS v." + webapis.tvinfo.getVersion(),
                 software: (window.tizen === undefined) ? lang('device_default_webapp_name') : "KinoPub v." + tizen.application.getAppInfo().version
             }
-        }).done(function(response) {
-
-        }).fail(function(jqXHR, textStatus, errorThrown) {
+        }).done(function(response) {}).fail(function(jqXHR, textStatus, errorThrown) {
             if (jqXHR.responseJSON.status != 401) {
                 kp.log.add(jqXHR.responseJSON.error);
                 kp.log.add(jqXHR.responseJSON.error_description);
@@ -388,7 +386,6 @@ kp.api = {
                 }
                 kp.log.add(jqXHR.responseJSON.error);
                 kp.log.add(jqXHR.responseJSON.error_description);
-
             }
             kp.ui.deviceActivation();
         });
@@ -415,11 +412,17 @@ kp.api = {
                 subscription_end_unix: response.subscription.end_time,
                 username: response.username
             });
+            kp.data.store('history', {
+                unwatched: {
+                    total: 0,
+                    items: {}
+                }
+            });
         }).fail(function(jqXHR, textStatus, errorThrown) {
             kp.log.add("API > getUser > Ошибочка! " + textStatus);
         });
     },
-    getUnwatched: function(){
+    getUnwatched: function() {
         var _this = this;
         //_this.getUnwatchedFilms();
         _this.getUnwatchedSerials();
@@ -434,8 +437,9 @@ kp.api = {
             if (response.status != 200) {
                 kp.log.add("API > getUser > Status Error " + response.status);
                 return;
+            } else {
+                kp.user.processUnwatched(response.items, 'films');
             }
-            console.log(response);
         }).fail(function(jqXHR, textStatus, errorThrown) {
             kp.log.add("API > getUnwatched > Ошибочка! " + textStatus);
         });
@@ -449,39 +453,92 @@ kp.api = {
             if (response.status != 200) {
                 kp.log.add("API > getUser > Status Error " + response.status);
                 return;
+            } else {
+                kp.user.processUnwatched(response.items, 'serials');
             }
-            console.log(response);
+        }).fail(function(jqXHR, textStatus, errorThrown) {
+            kp.log.add("API > getUnwatched > Ошибочка! " + textStatus);
+        });
+    },
+    // API playground function
+    getTypes: function() {
+        jQuery.ajax({
+            method: "GET",
+            url: kp.api.apiHostUrl + "types?access_token=" + kp.data.storage.token.access_token,
+        }).done(function(response) {
+            if (response.status != 200) {
+                kp.log.add("API > getUser > Status Error " + response.status);
+                return;
+            } else {
+                kp.config.updateTypes(response.items);
+            }
         }).fail(function(jqXHR, textStatus, errorThrown) {
             kp.log.add("API > getUnwatched > Ошибочка! " + textStatus);
         });
     }
 }
-
 /* ========================================================================
  * KinoPub: kinopub.user.js v0.1
  * https://github.com/ctepeo/KinoPub/
  * ========================================================================
- * Copyright 2011-2016 Egor "ctepeo" Sazanovich.
+ * Copyright 2011-2017 Egor "ctepeo" Sazanovich.
  * Licensed under GPL-3.0 (https://github.com/ctepeo/KinoPub/blob/master/LICENSE)
  * ======================================================================== */
-
 kp.user = {
-    _init: function() {
-
-    },
+    _init: function() {},
     getUser: function() {
         kp.api.getUser();
+    },
+    // returns array with user's private menu items
+    getUserNav: function() {
+        var nav = [];
+        for (i in kp.config.menues.my) {
+            var item = kp.config.menues.my[i];
+            item.title = lang(item.lang);
+            nav.push(item);
+        }
+        return nav;
+    },
+    // returns array with user defined (TODO) nav menu
+    getUserCategories: function() {
+        var nav = [];
+        // TODO -> provide user ability to change the items 
+        var source = kp.config.menues.categories;
+        for (i in source) {
+            var item = source[i];
+            if (item.lang != false) item.title = lang(item.lang);
+            nav.push(item);
+        }
+        return nav;
+    },
+    processUnwatched: function(items, type) {
+        switch (type) {
+            case 'films':
+                break;
+            case 'serials':
+                var total = 0;
+                kp.data.storage.history.unwatched.serials = {};
+                for (i in items) {
+                    var item = items[i];
+                    total = total + item.new, 10;
+                    kp.data.storage.history.unwatched.serials[item.id] = item;
+                }
+                kp.data.storage.history.unwatched.total = total;
+                break;
+            default:
+                kp.log.add('User > processUnwatched > Тип данных не найден > ' + type);
+                break;
+        }
+        kp.ui.updateUnwatched();
     }
 }
-
 /* ========================================================================
  * KinoPub: kinopub.ui.js v0.1
  * https://github.com/ctepeo/KinoPub/
  * ========================================================================
- * Copyright 2011-2016 Egor "ctepeo" Sazanovich.
+ * Copyright 2011-2017 Egor "ctepeo" Sazanovich.
  * Licensed under GPL-3.0 (https://github.com/ctepeo/KinoPub/blob/master/LICENSE)
  * ======================================================================== */
-
 kp.ui = {
     _duration: 10,
     _init: function() {
@@ -491,10 +548,14 @@ kp.ui = {
         var _this = this;
         _this._reset();
         jQuery("body").addClass("kp-welcome").html("<div class=\"kp-logo\"><h2>kino<span>pub</span></h2></div>");
-        jQuery(".kp-logo").animate({ opacity: 1 }, 15 * _this._duration).promise().then(function() {
+        jQuery(".kp-logo").animate({
+            opacity: 1
+        }, 15 * _this._duration).promise().then(function() {
             if (!kp.auth.checkAccessToken()) {
                 // move upper to provide space for status informer
-                jQuery(".kp-logo").animate({ marginTop: '-10%' }, 10 * _this._duration).promise().then(function() {
+                jQuery(".kp-logo").animate({
+                    marginTop: '-10%'
+                }, 10 * _this._duration).promise().then(function() {
                     jQuery("<div class=\"kp-status\"></div>").insertAfter(".kp-logo");
                     _this.setLoader(jQuery(".kp-status"));
                 });
@@ -519,8 +580,7 @@ kp.ui = {
     // force device activation dialog
     deviceActivation: function() {
         kp.log.add("UI > Интерфейс активации");
-        if (jQuery("#kp-device-activation").length)
-            return false;
+        if (jQuery("#kp-device-activation").length) return false;
         this.removeLoaders();
         kp.modules.transferControl('ui', 'activation');
         jQuery("body").addClass("kp-blurred");
@@ -576,11 +636,68 @@ kp.ui = {
             // build very basics
             kp.ui.load("ui/_header", function(response) {
                 jQuery("body").html(response);
+                //  set lang
+                kp.search._init();
+                // update userinfo block
+                kp.ui.updateUserinfo();
+                // populate menues
+                var items = kp.user.getUserNav();
+                for (keyword in items) {
+                    var item = items[keyword];
+                    jQuery(".kp-header .kp-my-categories ul").append(kp.ui.menuItem(item));
+                }
+                kp.ui.drawMainNav();
+                // get updates
+                kp.ui.getUnwatched();
+                // load main screen
+                kp.modules.transferControl('grid', 'homepage');
             });
         }
     },
+    drawMainNav: function() {
+        var categories = kp.user.getUserCategories();
+        jQuery(".kp-header .kp-main-categories ul > *").remove();
+        for (keyword in categories) {
+            var item = categories[keyword];
+            jQuery(".kp-header .kp-main-categories ul").append(kp.ui.menuItem(item));
+        }
+    },
+    // returns HTML for menu item
+    menuItem: function(item) {
+        var data = "";
+        for (i in item) {
+            data = data + "data-kp-" + i + "=\"" + item[i] + "\" ";
+        }
+        return "<li " + data + "><a href=\"#\">" + item.title + "</a></li>";
+    },
+    // updates i_watch element with the unwatched counter
+    getUnwatched: function() {
+        // get data
+        kp.api.getUnwatched();
+    },
+    updateUnwatched: function() {
+        if (kp.data.storage.history.unwatched.total > 0) {
+            jQuery(".kp-top-bar .kp-my-categories ul li[data-kp-keyword='my_watched']").addClass("kp-notify");
+            if (jQuery(".kp-top-bar .kp-my-categories ul li.kp-notify .kp-my-notifications").length) {
+                jQuery(".kp-top-bar .kp-my-categories ul li.kp-notify .kp-my-notifications").html(kp.data.storage.history.unwatched.total);
+            } else {
+                jQuery(".kp-top-bar .kp-my-categories ul li.kp-notify a").append("<span class=\"kp-my-notifications\">" + kp.data.storage.history.unwatched.total + "</span>");
+            }
+        } else {
+            jQuery(".kp-top-bar .kp-my-categories ul li.kp-notify .kp-my-notification").remove();
+            jQuery(".kp-top-bar .kp-my-categories ul li.kp-notify").removeClass("kp-notify");
+        }
+    },
+    // update userinfo block
+    updateUserinfo: function() {
+        jQuery(".kp-userinfo .kp-userpic").prop("src", kp.data.storage.user.profile_avatar);
+        jQuery(".kp-userinfo .kp-username").html(kp.data.storage.user.username);
+        jQuery(".kp-userinfo .kp-user-pro-duration").text(kp.data.storage.user.subscription_days);
+        kp.log.add("UI > updateUserinfo > Обновлен UI");
+    },
     // key mapping
     onGetControl: function(type) {
+        var _this = this;
         switch (type) {
             case 'activation':
                 kp.device.registerKey(['ENTER'], function() {
@@ -591,7 +708,9 @@ kp.ui = {
                 });
                 break;
             case 'homepage':
-                kp.api.getUnwatched();
+                //
+                break;
+            case 'grid':
                 break;
             default:
                 kp.log.add("UI > onGetControl > Неизвестный тип [" + type + "]");
@@ -599,12 +718,11 @@ kp.ui = {
         }
     }
 }
-
 /* ========================================================================
  * KinoPub: kinopub.auth.js v0.1
  * https://github.com/ctepeo/KinoPub/
  * ========================================================================
- * Copyright 2011-2016 Egor "ctepeo" Sazanovich.
+ * Copyright 2011-2017 Egor "ctepeo" Sazanovich.
  * Licensed under GPL-3.0 (https://github.com/ctepeo/KinoPub/blob/master/LICENSE)
  * ======================================================================== */
 kp.auth = {
@@ -708,10 +826,95 @@ kp.auth = {
     }
 }
 /* ========================================================================
+ * KinoPub: kinopub.config.js v0.1
+ * https://github.com/ctepeo/KinoPub/
+ * ========================================================================
+ * Copyright 2011-2017 Egor "ctepeo" Sazanovich.
+ * Licensed under GPL-3.0 (https://github.com/ctepeo/KinoPub/blob/master/LICENSE)
+ * ======================================================================== */
+kp.config = {
+    //  default menues' items
+    menues: {
+        // user's menu
+        my: [{
+            module: 'grid',
+            method: 'watched',
+            lang: 'nav_my_i_watch',
+            keyword: 'my_watched'
+        }, {
+            module: 'bookmarks',
+            method: 'index',
+            lang: 'nav_my_bookmarks'
+        }, {
+            module: 'playlists',
+            method: 'index',
+            lang: 'nav_my_playlists'
+        }],
+        // default navigation
+        categories: [{
+            module: 'grid',
+            method: 'movie',
+            lang: 'nav_categories_movie'
+        }, {
+            module: 'grid',
+            method: 'serial',
+            lang: 'nav_categories_serial'
+        }, {
+            module: 'grid',
+            method: 'tvshow',
+            lang: 'nav_categories_tvshow'
+        }, {
+            module: 'grid',
+            method: 'ddd',
+            lang: 'nav_categories_3d'
+        }, {
+            module: 'grid',
+            method: 'kkkk',
+            lang: 'nav_categories_4k'
+        }, {
+            module: 'grid',
+            method: 'concert',
+            lang: 'nav_categories_concert'
+        }, {
+            module: 'grid',
+            method: 'documovie',
+            lang: 'nav_categories_documovie'
+        }, {
+            module: 'grid',
+            method: 'docuserial',
+            lang: 'nav_categories_docuserial'
+        }, {
+            module: 'grid',
+            method: 'picked',
+            lang: 'nav_categories_picked'
+        }, ]
+    },
+    // functions
+    updateTypes: function(data) {
+        var nav = [];
+        for (i in data) {
+            var item = data[i];
+            var navItem = {
+                module: 'grid',
+                method: item.id,
+                lang: false,
+                title: item.title
+            };
+            nav.push(navItem);
+        }
+        nav.push({
+            module: 'grid',
+            method: 'picked',
+            lang: 'nav_categories_picked'
+        });
+        kp.config.menues.categories = nav;
+    }
+}
+/* ========================================================================
  * KinoPub: kinopub.modules.js v0.1
  * https://github.com/ctepeo/KinoPub/
  * ========================================================================
- * Copyright 2011-2016 Egor "ctepeo" Sazanovich.
+ * Copyright 2011-2017 Egor "ctepeo" Sazanovich.
  * Licensed under GPL-3.0 (https://github.com/ctepeo/KinoPub/blob/master/LICENSE)
  * ======================================================================== */
 
@@ -722,7 +925,8 @@ kp.modules = {
         'device',
         'ui',
         'user',
-        'boot'
+        'boot',
+        'grid'
     ],
     controlledBy: false,
     // load modules' defaults
@@ -763,17 +967,81 @@ kp.modules = {
 }
 
 /* ========================================================================
+ * KinoPub: kinopub.search.js v0.1
+ * https://github.com/ctepeo/KinoPub/
+ * ========================================================================
+ * Copyright 2011-2017 Egor "ctepeo" Sazanovich.
+ * Licensed under GPL-3.0 (https://github.com/ctepeo/KinoPub/blob/master/LICENSE)
+ * ======================================================================== */
+kp.search = {
+    _init: function() {
+        jQuery(".kp-top-bar .kp-top-searchbar .kp-searchbox").data("placeholder", lang('search_placeholder')).val(lang('search_placeholder'));
+        jQuery(".kp-top-bar").on("focus", ".kp-top-searchbar .kp-searchbox", function() {
+            var input = jQuery(this);
+            input.closest(".kp-top-searchbar").addClass("active");
+            if (input.val() == input.data("placeholder")) {
+                input.val("");
+            }
+        });
+        jQuery(".kp-top-bar").on("blur", ".kp-top-searchbar .kp-searchbox", function() {
+            var input = jQuery(this);
+            input.closest(".kp-top-searchbar").removeClass("active");
+            if (jQuery.trim(input.val()).length == 0) {
+                input.val(input.data("placeholder"));
+            };
+        });
+    }
+}
+/* ========================================================================
+ * KinoPub: kinopub.grid.js v0.1
+ * https://github.com/ctepeo/KinoPub/
+ * ========================================================================
+ * Copyright 2011-2017 Egor "ctepeo" Sazanovich.
+ * Licensed under GPL-3.0 (https://github.com/ctepeo/KinoPub/blob/master/LICENSE)
+ * ======================================================================== */
+kp.grid = {
+    _init: function() {},
+    _setLoader: function() {
+        jQuery(".kp-container").html("<div class=\"kp-loader\"><i class=\"fa fa-cog faa-spin animated\"></i></div>");
+    },
+    // workers
+    onGetControl: function(type) {
+        switch (type) {
+            case 'homepage':
+                this._setLoader();
+                break;
+            default:
+                kp.log.add("Grid > " + type)
+                break;
+        }
+    }
+}
+/* ========================================================================
  * KinoPub: kinopub.lang.ru.js v0.1
  * https://github.com/ctepeo/KinoPub/
  * ========================================================================
- * Copyright 2011-2016 Egor "ctepeo" Sazanovich.
+ * Copyright 2011-2017 Egor "ctepeo" Sazanovich.
  * Licensed under GPL-3.0 (https://github.com/ctepeo/KinoPub/blob/master/LICENSE)
  * ======================================================================== */
-
 kp.lang.ru = {
     device_default_webapp_name: "WebApp",
     device_default_webapp_detailed_name: "WebApp by ctepeo",
     device_default_tizenapp_name: "Мой TizenTV",
     device_activation_header: "Активация устройства",
-    device_activation_description: "Введите указанный код на сайте"
+    device_activation_description: "Введите указанный код на сайте",
+    // search
+    search_placeholder: "Поиск",
+    // menues
+    nav_my_i_watch: "Я смотрю",
+    nav_my_bookmarks: "Закладки",
+    nav_my_playlists: "Плейлисты",
+    nav_categories_movie: "Фильмы",
+    nav_categories_serial: "Сериалы",
+    nav_categories_tvshow: "ТВ Шоу",
+    nav_categories_3d: "3D",
+    nav_categories_4k: "4K",
+    nav_categories_concert: "Концерты",
+    nav_categories_documovie: "Докуфильмы",
+    nav_categories_docuserial: "Докусериалы",
+    nav_categories_picked: "Подборки"
 }

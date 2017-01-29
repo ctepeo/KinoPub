@@ -1,11 +1,12 @@
 /*!
  * KinoPub v0.1 (https://github.com/ctepeo/KinoPub/)
- * Copyright 2011-2016 Egor "ctepeo" Sazanovich.
+ * Copyright 2011-2017 Egor "ctepeo" Sazanovich.
  * Licensed under GPL-3.0 (https://github.com/ctepeo/KinoPub/blob/master/LICENSE)
  */
 
 @import "../../lib/bower_components/bootswatch/darkly/_variables";
 @import "kinopub.colors";
+@import "font-awesome";
 html {
     min-height: 100%;
 }
@@ -122,6 +123,7 @@ body {
         .kp-profile {
             float: left;
             width: 100%;
+            margin-bottom: 5%;
             > * {
                 float: left;
                 width: 100%;
@@ -129,10 +131,11 @@ body {
             .kp-logo {
                 font-weight: bold;
                 font-size: 3em;
-                text-align: left;
+                text-align: right;
                 line-height: 1em;
                 margin-top: 0%;
                 color: $color-white;
+                text-shadow: 0px 2px 0px rgba($color-black, 1);
                 span {
                     color: $color-blue-light;
                 }
@@ -141,13 +144,16 @@ body {
                 margin-left: 1%;
                 font-size: 1.7em;
                 .kp-userpic {
-                    float: left;
+                    float: right;
+                    max-height: 32px;
+                    margin: 5px;
                 }
                 .kp-user-data {
-                    float: left;
-                    margin-left: 2%;
+                    float: right;
+                    margin-right: 2%;
+                    text-align: right;
                     > * {
-                        float: left;
+                        float: right;
                         width: 100%;
                     }
                     .kp-user-pro-duration {
@@ -155,14 +161,19 @@ body {
                         font-size: 0.5em;
                         overflow: hidden;
                         font-weight: 800;
-                        line-height: 0.5em;
-                        margin-top: 7%;
+                        line-height: 1em;
+                        &:before {
+                            @extend .fa;
+                            @extend .fa-calendar-o;
+                            padding-left: 3%;
+                            float: right;
+                        }
                     }
                     .kp-username {
                         color: $color-gray-light;
-                        font-size: 0.7em;
+                        font-size: 0.5em;
                         font-weight: 800;
-                        line-height: 0.7em;
+                        line-height: 1.2em;
                     }
                 }
                 // pro 
@@ -174,6 +185,24 @@ body {
                         color: $color-gray-light;
                     }
                 }
+                // actions list near userinfo block
+                .kp-user-actions {
+                    float: right;
+                    ul {
+                        list-style: none;
+                        margin: 0px;
+                        padding: 0px;
+                        li {
+                            float: right;
+                            a {
+                                color: $color-white;
+                                padding-left: 30%;
+                                float: right;
+                                font-size: 0.8em;
+                            }
+                        }
+                    }
+                }
             }
         }
         .kp-top-bar {
@@ -181,6 +210,97 @@ body {
             width: 100%;
             position: relative;
             top: 0px;
+            .kp-top-searchbar {
+                float: left;
+                width: 100%;
+                margin-top: 0.8%;
+                opacity: 0.5;
+                &.active {
+                    opacity: 1;
+                    input {
+                        color: $color-white;
+                    }
+                }
+                > * {
+                    float: left;
+                }
+                > i {
+                    position: absolute;
+                    z-index: 10;
+                    color: $color-gray-light;
+                    padding: 1.4%;
+                }
+                ::-moz-placeholder {
+                    color: $color-gray-light;
+                }
+                /* Firefox 19+ */
+                :-moz-placeholder {
+                    color: $color-gray-light;
+                }
+                /* Firefox 18- */
+                :-ms-input-placeholder {
+                    color: $color-gray-light;
+                }
+                input {
+                    width: 99%;
+                    padding: 1%;
+                    background-color: rgba($color-gray-light, 0.3);
+                    color: $color-gray-lightest;
+                    padding-left: 5%;
+                    ::-webkit-input-placeholder {
+                        color: $color-gray-light;
+                    }
+                    outline: none;
+                }
+            }
+            .kp-my-categories {
+                float: left;
+                width: 100%;
+                margin-top: 1%;
+                ul {
+                    float: left;
+                    width: 100%;
+                    list-style: none;
+                    margin: 0px;
+                    padding: 0px;
+                    li {
+                        float: left;
+                        margin-right: 2%;
+                        a {
+                            font-size: 0.7em;
+                            font-weight: 700;
+                            color: $color-gray-light;
+                            padding: 5px 10px;
+                            &:hover {
+                                background-color: $color-gray-darkest;
+                                color: $color-white;
+                            }
+                        }
+                        &.kp-notify {
+                            a {
+                                color: $color-white;
+                                background-color: $color-gray-darkest;
+                                border: 1px solid $color-orange;
+                                .kp-my-notifications {
+                                    background-color: $color-orange;
+                                    padding: 10px;
+                                    color: $color-white;
+                                    font-weight: 800;
+                                    font-size: 1em;
+                                    margin-left: 5%;
+                                }
+                            }
+                        }
+                        &.kp-focus {
+                            a {
+                                background-color: black;
+                                color: $color-orange;
+                            }
+                        }
+                    }
+                }
+            }
+            /*
             .kp-unwatched-container {
                 overflow-x: hidden;
                 height: 155px;
@@ -287,7 +407,52 @@ body {
                         }
                     }
                 }
+            } */
+        }
+        .kp-main-categories {
+            float: left;
+            width: 100%;
+            margin-top: 0.5%;
+            margin-bottom: 1%;
+            ul {
+                li {
+                    a {
+                        font-weight: 700;
+                        color: $color-gray-lightest;
+                        font-size: 0.9em;
+                        &:hover {
+                            background-color: $color-gray-darkest;
+                            color: $color-white;
+                        }
+                    }
+                    &.kp-focus {
+                        a {
+                            background-color: black;
+                            color: $color-orange;
+                        }
+                    }
+                }
             }
+        }
+    }
+    .kp-container {
+        float: left;
+        width: 100%;
+        min-height: 1000px;
+        background-color: $color-gray-background;
+        display: block;
+        &:before {
+            width: 100%;
+            float: left;
+            height: 100px;
+            content: " ";
+            /* Permalink - use to edit and share this gradient: http://colorzilla.com/gradient-editor/#000000+0,000000+100&1+1,0+54 */
+            background: -moz-linear-gradient(top, rgba($color-black, 1) 0%, rgba($color-black, 1) 1%, rgba($color-black, 0) 54%, rgba($color-black, 0) 100%);
+            /* FF3.6-15 */
+            background: -webkit-linear-gradient(top, rgba($color-black, 1) 0%, rgba($color-black, 1) 1%, rgba($color-black, 0) 54%, rgba($color-black, 0) 100%);
+            /* Chrome10-25,Safari5.1-6 */
+            background: linear-gradient(to bottom, rgba($color-black, 1) 0%, rgba($color-black, 1) 1%, rgba($color-black, 0) 54%, rgba($color-black, 0) 100%);
+            /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
         }
     }
     /* helpers */
@@ -316,5 +481,9 @@ body {
     }
     .shadow {
         text-shadow: 1px 1px 0px rgba(0, 0, 0, 1);
+    }
+    /* tags' default styles */
+    a {
+        outline: 0;
     }
 }

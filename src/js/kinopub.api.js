@@ -2,10 +2,9 @@
  * KinoPub: kinopub.api.js v0.1
  * https://github.com/ctepeo/KinoPub/
  * ========================================================================
- * Copyright 2011-2016 Egor "ctepeo" Sazanovich.
+ * Copyright 2011-2017 Egor "ctepeo" Sazanovich.
  * Licensed under GPL-3.0 (https://github.com/ctepeo/KinoPub/blob/master/LICENSE)
  * ======================================================================== */
-
 kp.api = {
     auth: {
         host: "https://api.service-kp.com/oauth2/device",
@@ -73,9 +72,7 @@ kp.api = {
                 hardware: (window.tizen === undefined) ? lang('device_default_webapp_detailed_name') + " v. " + kp.version : "OS v." + webapis.tvinfo.getVersion(),
                 software: (window.tizen === undefined) ? lang('device_default_webapp_name') : "KinoPub v." + tizen.application.getAppInfo().version
             }
-        }).done(function(response) {
-
-        }).fail(function(jqXHR, textStatus, errorThrown) {
+        }).done(function(response) {}).fail(function(jqXHR, textStatus, errorThrown) {
             if (jqXHR.responseJSON.status != 401) {
                 kp.log.add(jqXHR.responseJSON.error);
                 kp.log.add(jqXHR.responseJSON.error_description);
@@ -108,7 +105,6 @@ kp.api = {
                 }
                 kp.log.add(jqXHR.responseJSON.error);
                 kp.log.add(jqXHR.responseJSON.error_description);
-
             }
             kp.ui.deviceActivation();
         });
@@ -135,11 +131,17 @@ kp.api = {
                 subscription_end_unix: response.subscription.end_time,
                 username: response.username
             });
+            kp.data.store('history', {
+                unwatched: {
+                    total: 0,
+                    items: {}
+                }
+            });
         }).fail(function(jqXHR, textStatus, errorThrown) {
             kp.log.add("API > getUser > Ошибочка! " + textStatus);
         });
     },
-    getUnwatched: function(){
+    getUnwatched: function() {
         var _this = this;
         //_this.getUnwatchedFilms();
         _this.getUnwatchedSerials();
@@ -154,8 +156,9 @@ kp.api = {
             if (response.status != 200) {
                 kp.log.add("API > getUser > Status Error " + response.status);
                 return;
+            } else {
+                kp.user.processUnwatched(response.items, 'films');
             }
-            console.log(response);
         }).fail(function(jqXHR, textStatus, errorThrown) {
             kp.log.add("API > getUnwatched > Ошибочка! " + textStatus);
         });
@@ -169,8 +172,25 @@ kp.api = {
             if (response.status != 200) {
                 kp.log.add("API > getUser > Status Error " + response.status);
                 return;
+            } else {
+                kp.user.processUnwatched(response.items, 'serials');
             }
-            console.log(response);
+        }).fail(function(jqXHR, textStatus, errorThrown) {
+            kp.log.add("API > getUnwatched > Ошибочка! " + textStatus);
+        });
+    },
+    // API playground function
+    getTypes: function() {
+        jQuery.ajax({
+            method: "GET",
+            url: kp.api.apiHostUrl + "types?access_token=" + kp.data.storage.token.access_token,
+        }).done(function(response) {
+            if (response.status != 200) {
+                kp.log.add("API > getUser > Status Error " + response.status);
+                return;
+            } else {
+                kp.config.updateTypes(response.items);
+            }
         }).fail(function(jqXHR, textStatus, errorThrown) {
             kp.log.add("API > getUnwatched > Ошибочка! " + textStatus);
         });

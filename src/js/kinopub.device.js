@@ -2,7 +2,7 @@
  * KinoPub: kinopub.tv.js v0.1
  * https://github.com/ctepeo/KinoPub/
  * ========================================================================
- * Copyright 2011-2016 Egor "ctepeo" Sazanovich.
+ * Copyright 2011-2017 Egor "ctepeo" Sazanovich.
  * Licensed under GPL-3.0 (https://github.com/ctepeo/KinoPub/blob/master/LICENSE)
  * ======================================================================== */
 

@@ -2,7 +2,7 @@
  * KinoPub: kinopub.modules.js v0.1
  * https://github.com/ctepeo/KinoPub/
  * ========================================================================
- * Copyright 2011-2016 Egor "ctepeo" Sazanovich.
+ * Copyright 2011-2017 Egor "ctepeo" Sazanovich.
  * Licensed under GPL-3.0 (https://github.com/ctepeo/KinoPub/blob/master/LICENSE)
  * ======================================================================== */
 
@@ -13,7 +13,8 @@ kp.modules = {
         'device',
         'ui',
         'user',
-        'boot'
+        'boot',
+        'grid'
     ],
     controlledBy: false,
     // load modules' defaults

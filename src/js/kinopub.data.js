@@ -2,7 +2,7 @@
  * KinoPub: kinopub.data.js v0.1
  * https://github.com/ctepeo/KinoPub/
  * ========================================================================
- * Copyright 2011-2016 Egor "ctepeo" Sazanovich.
+ * Copyright 2011-2017 Egor "ctepeo" Sazanovich.
  * Licensed under GPL-3.0 (https://github.com/ctepeo/KinoPub/blob/master/LICENSE)
  * ======================================================================== */
 kp.data = {
@@ -10,7 +10,8 @@ kp.data = {
     boot: {
         device: ['name', 'code', 'expires_in', 'expiry_interval', 'interval', 'user_code', 'verification_uri'],
         token: ['access_token', 'expires_in', 'expiry_interval', 'refresh_token'],
-        user: ['profile_avatar', 'profile_name', 'reg_date', 'reg_unix', 'subscription_active', 'subscription_days', 'subscription_end_unix', 'subscription_end_date', 'username']
+        user: ['profile_avatar', 'profile_name', 'reg_date', 'reg_unix', 'subscription_active', 'subscription_days', 'subscription_end_unix', 'subscription_end_date', 'username'],
+        history: ['unwatched']
     },
     storage: {},
     _init: function() {
