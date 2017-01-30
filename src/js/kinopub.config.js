@@ -6,6 +6,11 @@
  * Licensed under GPL-3.0 (https://github.com/ctepeo/KinoPub/blob/master/LICENSE)
  * ======================================================================== */
 kp.config = {
+    _parent: false,
+    _init: function(_parent) {
+        this._parent = _parent;
+        return this;
+    },
     //  default menues' items
     menues: {
         // user's menu
@@ -80,6 +85,6 @@ kp.config = {
             method: 'picked',
             lang: 'nav_categories_picked'
         });
-        kp.config.menues.categories = nav;
+        this.menues.categories = nav;
     }
 }

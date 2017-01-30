@@ -6,8 +6,11 @@
  * Licensed under GPL-3.0 (https://github.com/ctepeo/KinoPub/blob/master/LICENSE)
  * ======================================================================== */
 kp.search = {
-    _init: function() {
-        jQuery(".kp-top-bar .kp-top-searchbar .kp-searchbox").data("placeholder", lang('search_placeholder')).val(lang('search_placeholder'));
+    _parent: false,
+    _init: function(_parent) {
+        this._parent = _parent;
+        var _this = this;
+        jQuery(".kp-top-bar .kp-top-searchbar .kp-searchbox").data("placeholder", _this._parent.lang.get('search_placeholder')).val(_this._parent.lang.get('search_placeholder'));
         jQuery(".kp-top-bar").on("focus", ".kp-top-searchbar .kp-searchbox", function() {
             var input = jQuery(this);
             input.closest(".kp-top-searchbar").addClass("active");
@@ -22,5 +25,6 @@ kp.search = {
                 input.val(input.data("placeholder"));
             };
         });
+        return this;
     }
 }

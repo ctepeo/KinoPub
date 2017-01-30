@@ -7,8 +7,10 @@
  * ======================================================================== */
 kp.ui = {
     _duration: 10,
-    _init: function() {
-        this._welcome();
+    _parent: false,
+    _init: function(_parent) {
+        this._parent = _parent;
+        return this._welcome();
     },
     _welcome: function() {
         var _this = this;
@@ -17,7 +19,7 @@ kp.ui = {
         jQuery(".kp-logo").animate({
             opacity: 1
         }, 15 * _this._duration).promise().then(function() {
-            if (!kp.auth.checkAccessToken()) {
+            if (!_this._parent.auth.checkAccessToken()) {
                 // move upper to provide space for status informer
                 jQuery(".kp-logo").animate({
                     marginTop: '-10%'
@@ -27,6 +29,7 @@ kp.ui = {
                 });
             }
         });
+        return _this;
     },
     _reset: function() {
         jQuery("body").html("");
@@ -45,22 +48,24 @@ kp.ui = {
     },
     // force device activation dialog
     deviceActivation: function() {
-        kp.log.add("UI > Интерфейс активации");
+        var _this = this;
+        this._parent.log.add("UI > Интерфейс активации");
         if (jQuery("#kp-device-activation").length) return false;
         this.removeLoaders();
-        kp.modules.transferControl('ui', 'activation');
+        this.modules.transferControl('ui', 'activation');
         jQuery("body").addClass("kp-blurred");
-        jQuery("body").append("<div id=\"kp-device-activation\"><div class=\"kp-device-activation-container\"><h3>" + lang('device_activation_header') + "</h3><div class=\"kp-device-activation-code\"></div></div></div>");
+        jQuery("body").append("<div id=\"kp-device-activation\"><div class=\"kp-device-activation-container\"><h3>" + this._parent.lang.get('device_activation_header') + "</h3><div class=\"kp-device-activation-code\"></div></div></div>");
         jQuery("#kp-device-activation").css({
-            width: kp.device.width + 'px',
-            height: kp.device.height + 'px'
+            width: _this._parent.device.width + 'px',
+            height: _this._parent.device.height + 'px'
         });
         this.setLoader(jQuery("#kp-device-activation .kp-device-activation-code"));
-        kp.auth.getDeviceCode();
+        this.auth.getDeviceCode();
     },
     // hide activation dialog
     deviceActivated: function() {
-        kp.log.add("UI > Скрываем интерфейс активации");
+        var _this = this;
+        _this._parent.log.add("UI > Скрываем интерфейс активации");
         jQuery("body").removeClass("kp-blurred");
         jQuery("#kp-device-activation").remove();
         var _this = this;
@@ -72,15 +77,15 @@ kp.ui = {
                 jQuery(".kp-logo").animate({
                     opacity: 0
                 }).promise().then(function() {
-                    kp.user.getUser();
+                    _this._parent.user.getUser();
                     jQuery(".kp-logo").remove();
                     jQuery("body").animate({
                         backgroundColor: '#2f373e'
                     }, 7 * _this._duration).promise().then(function() {
                         jQuery("body").removeClass("kp-welcome");
                         jQuery(".kp-logo, .kp-status").remove();
-                        kp.ui.drawLayout();
-                        kp.modules.transferControl('ui', 'homepage');
+                        _this.drawLayout();
+                        _this._parent.modules.transferControl('ui', 'homepage');
                     });
                 });
             });
@@ -88,44 +93,47 @@ kp.ui = {
     },
     // load html content from module/template to target block
     load: function(path, callback) {
+        var _this = this;
         jQuery.ajax({
             method: "GET",
-            url: kp.appPath + path + ".html"
+            url: _this._parent.appPath + path + ".html"
         }).done(function(response) {
             callback(response);
         }).fail(function(jqXHR, textStatus, errorThrown) {
-            kp.log.add("UI > Load > " + path + " (->" + target + ") >  Ошибочка! " + textStatus);
+            _this._parent.log.add("UI > Load > " + path + " (->" + target + ") >  Ошибочка! " + textStatus);
         });
     },
     drawLayout: function() {
+        var _this = this;
         if (!jQuery(".kp-header").length) {
             // build very basics
-            kp.ui.load("ui/_header", function(response) {
+            _this.load("ui/_header", function(response) {
                 jQuery("body").html(response);
                 //  set lang
-                kp.search._init();
+                _this._parent.search._init(_this._parent);
                 // update userinfo block
-                kp.ui.updateUserinfo();
+                _this._parent.ui.updateUserinfo();
                 // populate menues
-                var items = kp.user.getUserNav();
+                var items = _this._parent.user.getUserNav();
                 for (keyword in items) {
                     var item = items[keyword];
-                    jQuery(".kp-header .kp-my-categories ul").append(kp.ui.menuItem(item));
+                    jQuery(".kp-header .kp-my-categories ul").append(_this.menuItem(item));
                 }
-                kp.ui.drawMainNav();
+                _this.drawMainNav();
                 // get updates
-                kp.ui.getUnwatched();
+                _this.getUnwatched();
                 // load main screen
-                kp.modules.transferControl('grid', 'homepage');
+                _this._parent.modules.transferControl('grid', 'homepage');
             });
         }
     },
     drawMainNav: function() {
-        var categories = kp.user.getUserCategories();
+        var _this = this;
+        var categories = _this._parent.user.getUserCategories();
         jQuery(".kp-header .kp-main-categories ul > *").remove();
         for (keyword in categories) {
             var item = categories[keyword];
-            jQuery(".kp-header .kp-main-categories ul").append(kp.ui.menuItem(item));
+            jQuery(".kp-header .kp-main-categories ul").append(_this.menuItem(item));
         }
     },
     // returns HTML for menu item
@@ -139,15 +147,15 @@ kp.ui = {
     // updates i_watch element with the unwatched counter
     getUnwatched: function() {
         // get data
-        kp.api.getUnwatched();
+        this._parent.api.getUnwatched();
     },
     updateUnwatched: function() {
-        if (kp.data.storage.history.unwatched.total > 0) {
-            jQuery(".kp-top-bar .kp-my-categories ul li[data-kp-keyword='my_watched']").addClass("kp-notify");
-            if (jQuery(".kp-top-bar .kp-my-categories ul li.kp-notify .kp-my-notifications").length) {
-                jQuery(".kp-top-bar .kp-my-categories ul li.kp-notify .kp-my-notifications").html(kp.data.storage.history.unwatched.total);
+        if (this._parent.data.storage.history.unwatched.total > 0) {
+            jQuery(".kp-my-categories ul li[data-kp-keyword='my_watched']").addClass("kp-notify");
+            if (jQuery(".kp-my-categories ul li.kp-notify .kp-my-notifications").length) {
+                jQuery(".kp-my-categories ul li.kp-notify .kp-my-notifications").html(this._parent.data.storage.history.unwatched.total);
             } else {
-                jQuery(".kp-top-bar .kp-my-categories ul li.kp-notify a").append("<span class=\"kp-my-notifications\">" + kp.data.storage.history.unwatched.total + "</span>");
+                jQuery(".kp-my-categories ul li.kp-notify a").append("<span class=\"kp-my-notifications\">" + this._parent.data.storage.history.unwatched.total + "</span>");
             }
         } else {
             jQuery(".kp-top-bar .kp-my-categories ul li.kp-notify .kp-my-notification").remove();
@@ -156,21 +164,21 @@ kp.ui = {
     },
     // update userinfo block
     updateUserinfo: function() {
-        jQuery(".kp-userinfo .kp-userpic").prop("src", kp.data.storage.user.profile_avatar);
-        jQuery(".kp-userinfo .kp-username").html(kp.data.storage.user.username);
-        jQuery(".kp-userinfo .kp-user-pro-duration").text(kp.data.storage.user.subscription_days);
-        kp.log.add("UI > updateUserinfo > Обновлен UI");
+        jQuery(".kp-userinfo .kp-userpic").prop("src", this._parent.data.storage.user.profile_avatar);
+        jQuery(".kp-userinfo .kp-username").html(this._parent.data.storage.user.username);
+        jQuery(".kp-userinfo .kp-user-pro-duration").text(Math.round(this._parent.data.storage.user.subscription_days));
+        this._parent.log.add("UI > updateUserinfo > Обновлен UI");
     },
     // key mapping
     onGetControl: function(type) {
         var _this = this;
         switch (type) {
             case 'activation':
-                kp.device.registerKey(['ENTER'], function() {
-                    kp.api.getDeviceCode();
+                _this._parent.device.registerKey(['ENTER'], function() {
+                    _this._parent.api.getDeviceCode();
                 });
-                kp.device.registerEvent("#kp-device-activation .kp-device-activation-code h1", "dblclick", function() {
-                    kp.api.getDeviceCode();
+                _this._parent.device.registerEvent("#kp-device-activation .kp-device-activation-code h1", "dblclick", function() {
+                    _this._parent.api.getDeviceCode();
                 });
                 break;
             case 'homepage':
@@ -179,7 +187,7 @@ kp.ui = {
             case 'grid':
                 break;
             default:
-                kp.log.add("UI > onGetControl > Неизвестный тип [" + type + "]");
+                _this._parent.log.add("UI > onGetControl > Неизвестный тип [" + type + "]");
                 break;
         }
     }

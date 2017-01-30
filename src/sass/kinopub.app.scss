@@ -123,7 +123,6 @@ body {
         .kp-profile {
             float: left;
             width: 100%;
-            margin-bottom: 5%;
             > * {
                 float: left;
                 width: 100%;
@@ -132,7 +131,6 @@ body {
                 font-weight: bold;
                 font-size: 3em;
                 text-align: right;
-                line-height: 1em;
                 margin-top: 0%;
                 color: $color-white;
                 text-shadow: 0px 2px 0px rgba($color-black, 1);
@@ -140,66 +138,122 @@ body {
                     color: $color-blue-light;
                 }
             }
-            .kp-userinfo {
-                margin-left: 1%;
-                font-size: 1.7em;
-                .kp-userpic {
-                    float: right;
-                    max-height: 32px;
-                    margin: 5px;
-                }
-                .kp-user-data {
-                    float: right;
-                    margin-right: 2%;
-                    text-align: right;
+        }
+        .kp-userinfo {
+            margin-top: 5.7%;
+            font-size: 1.7em;
+            .kp-userpic {
+                float: left;
+                max-height: 55px;
+                border-radius: 5px;
+            }
+            .kp-user-data {
+                float: left;
+                text-align: left;
+                width: 80%;
+                .kp-user-row {
+                    float: left;
+                    width: 100%;
+                    margin-left: 5%;
                     > * {
-                        float: right;
-                        width: 100%;
+                        float: left;
                     }
                     .kp-user-pro-duration {
                         color: $color-gray-lightest;
                         font-size: 0.5em;
-                        overflow: hidden;
                         font-weight: 800;
-                        line-height: 1em;
+                        float: right;
                         &:before {
                             @extend .fa;
-                            @extend .fa-calendar-o;
-                            padding-left: 3%;
+                            @extend .fa-clock-o;
                             float: right;
+                            line-height: 1.5em;
+                            padding-left: 10px;
                         }
                     }
                     .kp-username {
-                        color: $color-gray-light;
+                        color: $color-orange;
                         font-size: 0.5em;
                         font-weight: 800;
                         line-height: 1.2em;
                     }
-                }
-                // pro 
-                &.kp-user-pro {
-                    .kp-username {
-                        color: $color-orange;
-                    }
-                    .kp-user-pro-duration {
-                        color: $color-gray-light;
-                    }
-                }
-                // actions list near userinfo block
-                .kp-user-actions {
-                    float: right;
-                    ul {
-                        list-style: none;
-                        margin: 0px;
-                        padding: 0px;
-                        li {
-                            float: right;
-                            a {
-                                color: $color-white;
-                                padding-left: 30%;
-                                float: right;
-                                font-size: 0.8em;
+                    .kp-my-categories {
+                        float: left;
+                        width: 100%;
+                        margin-top: 1%;
+                        ul {
+                            float: left;
+                            width: 100%;
+                            list-style: none;
+                            margin: 0px;
+                            padding: 0px;
+                            li {
+                                float: left;
+                                margin-right: 2%;
+                                a {
+                                    font-size: 0.4em;
+                                    font-weight: 700;
+                                    color: $color-gray-light;
+                                    padding: 2px 5px;
+                                    &:hover {
+                                        background-color: $color-gray-darkest;
+                                        color: $color-white;
+                                    }
+                                }
+                                &.kp-notify {
+                                    a {
+                                        background-color: $color-gray-dark;
+                                        border-bottom: 2px solid $color-gray-darkest;
+                                        .kp-my-notifications {
+                                            background-color: $color-orange;
+                                            padding: 5%;
+                                            color: $color-black;
+                                            font-weight: 800;
+                                            font-size: 0.8em;
+                                            margin-left: 5%;
+                                            position: absolute;
+                                            border-radius: 50%;
+                                            right: -17%;
+                                            top: -50%;
+                                            border-bottom: 2px solid $color-black;
+                                            z-index: 100;
+                                        }
+                                    }
+                                }
+                                &.kp-focus {
+                                    a {
+                                        background-color: black;
+                                        color: $color-orange;
+                                    }
+                                }
                             }
+                        }
+                    }
+                }
+            }
+            // pro 
+            &.kp-user-pro {
+                .kp-username {
+                    color: $color-orange;
+                }
+                .kp-user-pro-duration {
+                    color: $color-gray-light;
+                }
+            }
+            // actions list near userinfo block
+            .kp-user-actions {
+                float: left;
+                ul {
+                    list-style: none;
+                    margin: 0px;
+                    padding: 0px;
+                    li {
+                        float: right;
+                        a {
+                            color: $color-white;
+                            padding-left: 30%;
+                            float: right;
+                            font-size: 0.8em;
                         }
                     }
                 }
@@ -210,10 +264,11 @@ body {
             width: 100%;
             position: relative;
             top: 0px;
+            margin-top: 1%;
             .kp-top-searchbar {
                 float: left;
                 width: 100%;
-                margin-top: 0.8%;
+                margin-top: 1.5%;
                 opacity: 0.5;
                 &.active {
                     opacity: 1;
@@ -228,7 +283,7 @@ body {
                     position: absolute;
                     z-index: 10;
                     color: $color-gray-light;
-                    padding: 1.4%;
+                    padding: 2.5%;
                 }
                 ::-moz-placeholder {
                     color: $color-gray-light;
@@ -242,61 +297,19 @@ body {
                     color: $color-gray-light;
                 }
                 input {
-                    width: 99%;
-                    padding: 1%;
+                    width: 100%;
+                    padding: 2%;
                     background-color: rgba($color-gray-light, 0.3);
                     color: $color-gray-lightest;
-                    padding-left: 5%;
+                    padding-left: 8%;
                     ::-webkit-input-placeholder {
                         color: $color-gray-light;
                     }
+                    border-radius: 5px;
+                    border-bottom: 3px solid $color-gray-dark;
                     outline: none;
-                }
-            }
-            .kp-my-categories {
-                float: left;
-                width: 100%;
-                margin-top: 1%;
-                ul {
-                    float: left;
-                    width: 100%;
-                    list-style: none;
-                    margin: 0px;
-                    padding: 0px;
-                    li {
-                        float: left;
-                        margin-right: 2%;
-                        a {
-                            font-size: 0.7em;
-                            font-weight: 700;
-                            color: $color-gray-light;
-                            padding: 5px 10px;
-                            &:hover {
-                                background-color: $color-gray-darkest;
-                                color: $color-white;
-                            }
-                        }
-                        &.kp-notify {
-                            a {
-                                color: $color-white;
-                                background-color: $color-gray-darkest;
-                                border: 1px solid $color-orange;
-                                .kp-my-notifications {
-                                    background-color: $color-orange;
-                                    padding: 10px;
-                                    color: $color-white;
-                                    font-weight: 800;
-                                    font-size: 1em;
-                                    margin-left: 5%;
-                                }
-                            }
-                        }
-                        &.kp-focus {
-                            a {
-                                background-color: black;
-                                color: $color-orange;
-                            }
-                        }
+                    &:focus {
+                        border-bottom: 3px solid $color-gray-darkest;
                     }
                 }
             }
@@ -420,6 +433,7 @@ body {
                         font-weight: 700;
                         color: $color-gray-lightest;
                         font-size: 0.9em;
+                        text-shadow: 0px 2px 0px rgba($color-black, 1);
                         &:hover {
                             background-color: $color-gray-darkest;
                             color: $color-white;
@@ -441,6 +455,7 @@ body {
         min-height: 1000px;
         background-color: $color-gray-background;
         display: block;
+        background: url('/img/container-background.png');
         &:before {
             width: 100%;
             float: left;
@@ -453,6 +468,14 @@ body {
             /* Chrome10-25,Safari5.1-6 */
             background: linear-gradient(to bottom, rgba($color-black, 1) 0%, rgba($color-black, 1) 1%, rgba($color-black, 0) 54%, rgba($color-black, 0) 100%);
             /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+        }
+        .kp-loader {
+            background: rgba($color-gray, 0.3);
+            position: absolute;
+            z-index: 10;
+            i{
+                font-size: 5em;
+            }
         }
     }
     /* helpers */

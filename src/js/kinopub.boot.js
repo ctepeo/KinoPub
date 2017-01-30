@@ -10,34 +10,35 @@ var kp = {
     version: 0.1,
     appPath: "./kinopub-app/",
     _init: function() {
-        kp.modules._init();
+        this.modules._init(this);
+        return this;
     }
 };
 kp.boot = {
-    _init: function() {
-        if (!kp.data.storage.device.name) {
-            kp.data.store('device', {
-                name: (window.tizen === undefined) ? lang('device_default_webapp_name') : lang('device_default_tizenapp_name')
-            });
-        }
-        if (!kp.auth.isAuthorized()) {
-            kp.ui.deviceActivation();
-        } else {
-            if (kp.auth.checkAccessToken()) {
-                kp.api.notify();
-                kp.modules.transferControl('boot', false);
-                kp.ui.deviceActivated();
-            } else {
-                kp.ui.deviceActivation();
+        _parent: false,
+        _init: function(_parent) {
+            this._parent = _parent;
+            if (!this._parent.data.storage.device.name) {
+                this._parent.data.store('device', {
+                    name: (window.tizen === undefined) ? this._parent.lang.get('device_default_webapp_name') : this._parent.lang.get('device_default_tizenapp_name')
+                });
             }
+            if (!this._parent.auth.isAuthorized()) {
+                this._parent.ui.deviceActivation();
+            } else {
+                if (this._parent.auth.checkAccessToken()) {
+                    this._parent.api.notify();
+                    this._parent.modules.transferControl('boot', false);
+                    this._parent.ui.deviceActivated();
+                } else {
+                    this._parent.ui.deviceActivation();
+                }
+            }
+            return this;
+            console.log(this._parent.data.storage);
         }
-        console.log(kp.data.storage);
     }
-}
-jQuery(document).ready(function() {
-    kp._init();
-});
-/* global helpers */
+    /* global helpers */
 function isInt(value) {
     return !isNaN(value) && (function(x) {
         return (x | 0) === x;
@@ -56,3 +57,6 @@ function unix2date(UNIX_timestamp) {
     var time = date + ' ' + month + ' ' + year + ' ' + hour + ':' + min + ':' + sec;
     return time;
 }
+$(document).ready(function() {
+    var app = kp._init();
+});

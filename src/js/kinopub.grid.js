@@ -6,18 +6,26 @@
  * Licensed under GPL-3.0 (https://github.com/ctepeo/KinoPub/blob/master/LICENSE)
  * ======================================================================== */
 kp.grid = {
-    _init: function() {},
-    _setLoader: function() {
-        jQuery(".kp-container").html("<div class=\"kp-loader\"><i class=\"fa fa-cog faa-spin animated\"></i></div>");
+    _parent: false,
+    _init: function(_parent) {
+        this._parent = _parent;
+        return this;
+    },
+    _setContainerLoader: function() {
+        jQuery(".kp-container").html("<div class=\"kp-loader\"><i class=\"fa fa-cog faa-spin animated vcenter centered\"></i></div>");
+        jQuery(".kp-container .kp-loader").css({
+            width: jQuery(".kp-container").outerWidth(true) + 'px',
+            height: jQuery(".kp-container").outerHeight(true) + 'px',
+        });
     },
     // workers
     onGetControl: function(type) {
         switch (type) {
             case 'homepage':
-                this._setLoader();
+                this._setContainerLoader();
                 break;
             default:
-                kp.log.add("Grid > " + type)
+                this._parent.log.add("Grid > " + type)
                 break;
         }
     }

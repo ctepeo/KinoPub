@@ -10,34 +10,35 @@ var kp = {
     version: 0.1,
     appPath: "./kinopub-app/",
     _init: function() {
-        kp.modules._init();
+        this.modules._init(this);
+        return this;
     }
 };
 kp.boot = {
-    _init: function() {
-        if (!kp.data.storage.device.name) {
-            kp.data.store('device', {
-                name: (window.tizen === undefined) ? lang('device_default_webapp_name') : lang('device_default_tizenapp_name')
-            });
-        }
-        if (!kp.auth.isAuthorized()) {
-            kp.ui.deviceActivation();
-        } else {
-            if (kp.auth.checkAccessToken()) {
-                kp.api.notify();
-                kp.modules.transferControl('boot', false);
-                kp.ui.deviceActivated();
-            } else {
-                kp.ui.deviceActivation();
+        _parent: false,
+        _init: function(_parent) {
+            this._parent = _parent;
+            if (!this._parent.data.storage.device.name) {
+                this._parent.data.store('device', {
+                    name: (window.tizen === undefined) ? this._parent.lang.get('device_default_webapp_name') : this._parent.lang.get('device_default_tizenapp_name')
+                });
             }
+            if (!this._parent.auth.isAuthorized()) {
+                this._parent.ui.deviceActivation();
+            } else {
+                if (this._parent.auth.checkAccessToken()) {
+                    this._parent.api.notify();
+                    this._parent.modules.transferControl('boot', false);
+                    this._parent.ui.deviceActivated();
+                } else {
+                    this._parent.ui.deviceActivation();
+                }
+            }
+            return this;
+            console.log(this._parent.data.storage);
         }
-        console.log(kp.data.storage);
     }
-}
-jQuery(document).ready(function() {
-    kp._init();
-});
-/* global helpers */
+    /* global helpers */
 function isInt(value) {
     return !isNaN(value) && (function(x) {
         return (x | 0) === x;
@@ -56,6 +57,9 @@ function unix2date(UNIX_timestamp) {
     var time = date + ' ' + month + ' ' + year + ' ' + hour + ':' + min + ':' + sec;
     return time;
 }
+$(document).ready(function() {
+    var app = kp._init();
+});
 /* ========================================================================
  * KinoPub: kinopub.lang.js v0.1
  * https://github.com/ctepeo/KinoPub/
@@ -63,26 +67,25 @@ function unix2date(UNIX_timestamp) {
  * Copyright 2011-2017 Egor "ctepeo" Sazanovich.
  * Licensed under GPL-3.0 (https://github.com/ctepeo/KinoPub/blob/master/LICENSE)
  * ======================================================================== */
-
 kp.lang = {
+    _parent: false,
+    _init: function(_parent) {
+        this._parent = this;
+        return this;
+    },
     locale: 'ru',
-    string: function(keyword) {
-        if (typeof(kp.lang[kp.lang.locale]) == "undefined") {
-            kp.log.add("Lang > String > Locale " + kp.lang.locale + " не найдена");
+    get: function(keyword) {
+        if (typeof(kp.lang[this.locale]) == "undefined") {
+            this._parent.log.add("Lang > String > Locale " + this.locale + " не найдена");
             return "!" + keyword;
         }
-        if (typeof(kp.lang[kp.lang.locale][keyword]) == "undefined") {
-            kp.log.add("Lang > String > Определение " + keyword + " не найдено в локали " + kp.lang.locale);
+        if (typeof(kp.lang[this.locale][keyword]) == "undefined") {
+            this._parent.add("Lang > String > Определение " + keyword + " не найдено в локали " + this.locale);
             return "?" + keyword;
         }
-        return kp.lang[kp.lang.locale][keyword];
+        return kp.lang[this.locale][keyword];
     }
 }
-
-function lang(string) {
-    return kp.lang.string(string);
-}
-
 /* ========================================================================
  * KinoPub: kinopub.log.js v0.1
  * https://github.com/ctepeo/KinoPub/
@@ -90,22 +93,25 @@ function lang(string) {
  * Copyright 2011-2017 Egor "ctepeo" Sazanovich.
  * Licensed under GPL-3.0 (https://github.com/ctepeo/KinoPub/blob/master/LICENSE)
  * ======================================================================== */
-
 kp.log = {
+    _init: function(_parent) {
+        this._parent = _parent;
+        this.add("Log > _init > Модуль Log загружен");
+        return this;
+    },
+    _parent: false,
     data: {},
     storage: [],
     // last action
     date: false,
     add: function(msg) {
-        kp.log.date = new Date();
-        var date = kp.log.date.getHours() + ":" + kp.log.date.getHours() + ":" + kp.log.date.getSeconds() + "." + kp.log.date.getMilliseconds();
-        kp.log.data[date] = msg;
-        kp.log.storage.push(date + " > " + msg);
-        if (kp.dev)
-            console.log(date + " > " + msg);
+        this.date = new Date();
+        var date = this.date.getHours() + ":" + this.date.getHours() + ":" + this.date.getSeconds() + "." + this.date.getMilliseconds();
+        this.data[date] = msg;
+        this.storage.push(date + " > " + msg);
+        if (this._parent.dev) console.log(date + " > " + msg);
     }
 }
-
 /* ========================================================================
  * KinoPub: kinopub.data.js v0.1
  * https://github.com/ctepeo/KinoPub/
@@ -121,29 +127,33 @@ kp.data = {
         user: ['profile_avatar', 'profile_name', 'reg_date', 'reg_unix', 'subscription_active', 'subscription_days', 'subscription_end_unix', 'subscription_end_date', 'username'],
         history: ['unwatched']
     },
+    _parent: false,
     storage: {},
-    _init: function() {
+    _init: function(_parent) {
+        this._parent = _parent;
         for (type in this.boot) {
             var fields = this.boot[type];
             this.restore(type, fields);
         }
+        return this;
     },
     restore: function(source, fields, prefix) {
+        var _this = this;
         if (typeof(prefix) == "undefined") prefix = "kp_";
-        if (typeof(kp.data.storage[source]) == "undefined") {
-            kp.data.storage[source] = {};
+        if (typeof(this.storage[source]) == "undefined") {
+            this.storage[source] = {};
         }
         for (i in fields) {
             var name = fields[i];
-            if (typeof(kp.data.storage[source][name]) == "undefined") {
-                kp.data.storage[source][name] = null;
+            if (typeof(this.storage[source][name]) == "undefined") {
+                this.storage[source][name] = null;
             }
             if (Cookies.get(prefix + source + '_' + name) != "") value = Cookies.get(prefix + source + '_' + name);
             if (value == null || value == false) {
-                kp.log.add("Data > Restore > Игнорируем значение [" + source + "/" + name + "]");
+                this._parent.log.add("Data > Restore > Игнорируем значение [" + source + "/" + name + "]");
             } else {
-                kp.log.add("Data > Restore > [" + source + "/" + name + "] => " + value);
-                kp.data.storage[source][name] = value;
+                this._parent.log.add("Data > Restore > [" + source + "/" + name + "] => " + value);
+                this.storage[source][name] = value;
             }
         }
     },
@@ -154,7 +164,7 @@ kp.data = {
             Cookies.set(prefix + type + '_' + name, value, {
                 expires: 180
             });
-            kp.data.storage[type][name] = value;
+            this.storage[type][name] = value;
         }
     },
     remove: function(type, fields, prefix) {
@@ -162,12 +172,12 @@ kp.data = {
         for (i in fields) {
             var name = fields[i];
             Cookies.remove(prefix + type + '_' + name);
-            kp.data.storage[type][name] = null;
+            this.storage[type][name] = null;
         }
     },
     wipe: function() {
         return false;
-        kp.log.add("Data > Wipe > Удаляем все сохраненные значения");
+        this._parent.log.add("Data > Wipe > Удаляем все сохраненные значения");
         for (type in this.boot) {
             var fields = this.boot[type];
             this.remove(type, fields);
@@ -181,13 +191,15 @@ kp.data = {
  * Copyright 2011-2017 Egor "ctepeo" Sazanovich.
  * Licensed under GPL-3.0 (https://github.com/ctepeo/KinoPub/blob/master/LICENSE)
  * ======================================================================== */
-
 kp.device = {
     width: false,
     height: false,
-    _init: function() {
+    _parent: false,
+    _init: function(_parent) {
+        this._parent = _parent;
         this.width = this.getWidth();
         this.height = this.getHeight();
+        return this;
     },
     getWidth: function() {
         return jQuery(document).width();
@@ -196,10 +208,10 @@ kp.device = {
         return jQuery(document).height();
     },
     widthPercent: function(percent) {
-        return Math.round(kp.tv.width * (0.01 * percent));
+        return Math.round(this.width * (0.01 * percent));
     },
     heightPercent: function(percent) {
-        return Math.round(kp.tv.height * (0.01 * percent));
+        return Math.round(this.height * (0.01 * percent));
     },
     keys: {
         // default Tizen TV keymap
@@ -241,9 +253,7 @@ kp.device = {
         PLAYPAUSE: 10252
     },
     // set default keys handlers
-    defaultControls: function() {
-
-    },
+    defaultControls: function() {},
     keyHandlers: {},
     eventHandled: {},
     registerKey: function(code, callback) {
@@ -255,30 +265,27 @@ kp.device = {
             return;
         }
         if (!isInt(code) && typeof(this.keys[code]) == "undefined") {
-            kp.log.add("Device > registerKey > Код не найден [" + code + "]");
+            this._parent.log.add("Device > registerKey > Код не найден [" + code + "]");
             return;
         }
-        if (!isInt(code))
-            code = this.keys[code];
+        if (!isInt(code)) code = this.keys[code];
         this.keyHandlers[code] = callback;
     },
     registerEvent: function(selector, event, callback) {
         var _this = this;
-        if (typeof(_this.eventHandled[selector]) == "undefined")
-            _this.eventHandled[selector] = {};
+        if (typeof(_this.eventHandled[selector]) == "undefined") _this.eventHandled[selector] = {};
         _this.eventHandled[selector][event] = callback;
         jQuery(document).on(event, selector, _this.eventHandled[selector][event]);
     },
     setListeners: function() {
         jQuery(document).on("keyup", function(e) {
-            if (typeof(kp.device.keyHandlers[e.which]) != "undefined") {
-                kp.log.add("Device > Кнопка #" + e.which);
-                kp.device.keyHandlers[e.which]();
+            if (typeof(this.keyHandlers[e.which]) != "undefined") {
+                _this._parent.log.add("Device > Кнопка #" + e.which);
+                this.keyHandlers[e.which]();
             }
         });
     }
 }
-
 /* ========================================================================
  * KinoPub: kinopub.api.js v0.1
  * https://github.com/ctepeo/KinoPub/
@@ -287,6 +294,11 @@ kp.device = {
  * Licensed under GPL-3.0 (https://github.com/ctepeo/KinoPub/blob/master/LICENSE)
  * ======================================================================== */
 kp.api = {
+    _parent: false,
+    _init: function(_parent) {
+        this._parent = _parent;
+        return this;
+    },
     auth: {
         host: "https://api.service-kp.com/oauth2/device",
         refreshHost: "https://api.service-kp.com/oauth2/token",
@@ -310,13 +322,13 @@ kp.api = {
                 client_secret: _this.auth.client.secret
             }
         }).done(function(response) {
-            kp.log.add("Api > getDeviceCode > Код устройства получен (" + response['code'] + ")");
+            _this._parent.log.add("Api > getDeviceCode > Код устройства получен (" + response['code'] + ")");
             response.expiry_interval = response.expires_in;
             response.expires_in = (jQuery.now() / 1000) + response.expires_in;
-            kp.data.store('device', response);
-            kp.auth.showDeviceCode();
+            _this._parent.data.store('device', response);
+            _this._parent.auth.showDeviceCode();
         }).fail(function(jqXHR, textStatus, errorThrown) {
-            kp.log.add("Api > getDeviceCode > Ошибочка! " + textStatus);
+            _this._parent.log.add("Api > getDeviceCode > Ошибочка! " + textStatus);
         });
     },
     checkDeviceCode: function() {
@@ -328,80 +340,83 @@ kp.api = {
                 grant_type: 'device_token',
                 client_id: _this.auth.client.id,
                 client_secret: _this.auth.client.secret,
-                code: kp.data.storage.device.code
+                code: _this._parent.data.storage.device.code
             }
         }).done(function(response) {
             response.expiry_interval = response.expires_in;
             response.expires_in = (jQuery.now() / 1000) + response.expires_in;
-            kp.data.store('token', response);
-            kp.log.add("Auth > deviceCodeCheck > Успешно получили access_token, подметаем половичок");
-            kp.auth.cleanUpAfterGettingDeviceCode();
+            _this._parent.data.store('token', response);
+            _this._parent.log.add("Auth > deviceCodeCheck > Успешно получили access_token, подметаем половичок");
+            _this._parent.auth.cleanUpAfterGettingDeviceCode();
         }).fail(function(jqXHR, textStatus, errorThrown) {
             if (jqXHR.responseJSON.error != "authorization_pending") {
-                kp.log.add(jqXHR.responseJSON.error);
-                kp.log.add(jqXHR.responseJSON.error_description);
+                _this._parent.log.add(jqXHR.responseJSON.error);
+                _this._parent.log.add(jqXHR.responseJSON.error_description);
             }
         });
     },
     // notify server about current software version
     notify: function() {
+        var _this = this;
         jQuery.ajax({
             method: "POST",
-            url: kp.api.apiHostUrl + "device/notify?access_token=" + kp.data.storage.token.access_token,
+            url: _this.apiHostUrl + "device/notify?access_token=" + _this._parent.data.storage.token.access_token,
             data: {
-                title: (window.tizen === undefined) ? lang('device_default_webapp_name') + " @ " + window.location : (kp.data.storage.device.name ? kp.data.storage.device.name : lang('device_default_tizenapp_name')),
-                hardware: (window.tizen === undefined) ? lang('device_default_webapp_detailed_name') + " v. " + kp.version : "OS v." + webapis.tvinfo.getVersion(),
-                software: (window.tizen === undefined) ? lang('device_default_webapp_name') : "KinoPub v." + tizen.application.getAppInfo().version
+                title: (window.tizen === undefined) ? _this._parent.lang.get('device_default_webapp_name') + " @ " + window.location : (_this._parent.data.storage.device.name ? _this._parent.data.storage.device.name : _this._parent.lang.get('device_default_tizenapp_name')),
+                hardware: (window.tizen === undefined) ? _this._parent.lang.get('device_default_webapp_detailed_name') + " v. " + _this._parent.version : "OS v." + webapis.tvinfo.getVersion(),
+                software: (window.tizen === undefined) ? _this._parent.lang.get('device_default_webapp_name') : "KinoPub v." + tizen.application.getAppInfo().version
             }
         }).done(function(response) {}).fail(function(jqXHR, textStatus, errorThrown) {
             if (jqXHR.responseJSON.status != 401) {
-                kp.log.add(jqXHR.responseJSON.error);
-                kp.log.add(jqXHR.responseJSON.error_description);
+                _this._parent.log.add(jqXHR.responseJSON.error);
+                _this._parent.log.add(jqXHR.responseJSON.error_description);
             } else {
-                kp.api.updateAccessToken();
+                _this.updateAccessToken();
             }
         });
     },
     updateAccessToken: function() {
-        kp.log.add("API > updateAccessToken > Запрашиваем новый access token");
+        var _this = this;
+        _this._parent.log.add("API > updateAccessToken > Запрашиваем новый access token");
         jQuery.ajax({
             method: "POST",
-            url: kp.api.refreshTokenUrl,
+            url: _this.refreshTokenUrl,
             data: {
                 grant_type: 'refresh_token',
-                client_id: kp.api.auth.client.id,
-                client_secret: kp.api.auth.client.secret,
-                refresh_token: kp.data.storage.token.refresh_token
+                client_id: _this.auth.client.id,
+                client_secret: _this.auth.client.secret,
+                refresh_token: _this._parent.data.storage.token.refresh_token
             }
         }).done(function(response) {
-            kp.log.add("API > updateAccessToken > Access_token обновлен");
+            _this._parent.log.add("API > updateAccessToken > Access_token обновлен");
             response.expiry_interval = response.expires_in;
             response.expires_in = jQuery.now() + response.expires_in;
-            kp.data.store('token', response);
+            _this._parent.data.store('token', response);
         }).fail(function(jqXHR, textStatus, errorThrown) {
             if (jqXHR.responseJSON.status != 401) {
-                kp.log.add("API > updateAccessToken > Ошибочка! " + textStatus);
+                _this._parent.log.add("API > updateAccessToken > Ошибочка! " + textStatus);
                 if (jqXHR.responseJSON.error == "authorization_expired") {
-                    kp.data.wipe();
+                    _this._parent.data.wipe();
                 }
-                kp.log.add(jqXHR.responseJSON.error);
-                kp.log.add(jqXHR.responseJSON.error_description);
+                _this._parent.log.add(jqXHR.responseJSON.error);
+                _this._parent.log.add(jqXHR.responseJSON.error_description);
             }
-            kp.ui.deviceActivation();
+            _this._parent.ui.deviceActivation();
         });
     },
     getUser: function() {
-        kp.log.add("API > getUser > Получаем данные пользователя");
+        var _this = this;
+        _this._parent.log.add("API > getUser > Получаем данные пользователя");
         jQuery.ajax({
             method: "GET",
-            url: kp.api.apiHostUrl + "user?access_token=" + kp.data.storage.token.access_token,
+            url: _this.apiHostUrl + "user?access_token=" + _this._parent.data.storage.token.access_token,
         }).done(function(response) {
             if (response.status != 200) {
-                kp.log.add("API > getUser > Status Error " + response.status);
+                _this._parent.log.add("API > getUser > Status Error " + response.status);
                 return;
             }
             response = response.user;
-            kp.data.store('user', {
+            _this._parent.data.store('user', {
                 profile_avatar: response.profile.avatar,
                 profile_name: response.profile.name,
                 reg_date: unix2date(response.reg_date),
@@ -412,14 +427,14 @@ kp.api = {
                 subscription_end_unix: response.subscription.end_time,
                 username: response.username
             });
-            kp.data.store('history', {
+            _this._parent.data.store('history', {
                 unwatched: {
                     total: 0,
                     items: {}
                 }
             });
         }).fail(function(jqXHR, textStatus, errorThrown) {
-            kp.log.add("API > getUser > Ошибочка! " + textStatus);
+            _this._parent.log.add("API > getUser > Ошибочка! " + textStatus);
         });
     },
     getUnwatched: function() {
@@ -428,52 +443,55 @@ kp.api = {
         _this.getUnwatchedSerials();
     },
     getUnwatchedFilms: function() {
+        var _this = this;
         //https://api.service-kp.com/v1/watching/movies
-        kp.log.add("API > getUnwatched > Films > Получаем фильмы к просмотру");
+        _this._parent.log.add("API > getUnwatched > Films > Получаем фильмы к просмотру");
         jQuery.ajax({
             method: "GET",
-            url: kp.api.apiHostUrl + "watching/movies?access_token=" + kp.data.storage.token.access_token,
+            url: _this.apiHostUrl + "watching/movies?access_token=" + _this._parent.data.storage.token.access_token,
         }).done(function(response) {
             if (response.status != 200) {
-                kp.log.add("API > getUser > Status Error " + response.status);
+                _this._parent.log.add("API > getUser > Status Error " + response.status);
                 return;
             } else {
-                kp.user.processUnwatched(response.items, 'films');
+                _this._parent.user.processUnwatched(response.items, 'films');
             }
         }).fail(function(jqXHR, textStatus, errorThrown) {
-            kp.log.add("API > getUnwatched > Ошибочка! " + textStatus);
+            _this._parent.log.add("API > getUnwatched > Ошибочка! " + textStatus);
         });
     },
     getUnwatchedSerials: function() {
-        kp.log.add("API > getUnwatched > Serials > Получаем сериалы к просмотру");
+        var _this = this;
+        this._parent.log.add("API > getUnwatched > Serials > Получаем сериалы к просмотру");
         jQuery.ajax({
             method: "GET",
-            url: kp.api.apiHostUrl + "watching/serials?access_token=" + kp.data.storage.token.access_token,
+            url: _this.apiHostUrl + "watching/serials?access_token=" + _this._parent.data.storage.token.access_token,
         }).done(function(response) {
             if (response.status != 200) {
-                kp.log.add("API > getUser > Status Error " + response.status);
+                _this._parent.log.add("API > getUser > Status Error " + response.status);
                 return;
             } else {
                 kp.user.processUnwatched(response.items, 'serials');
             }
         }).fail(function(jqXHR, textStatus, errorThrown) {
-            kp.log.add("API > getUnwatched > Ошибочка! " + textStatus);
+            _this._parent.log.add("API > getUnwatched > Ошибочка! " + textStatus);
         });
     },
     // API playground function
     getTypes: function() {
+        var _this = this;
         jQuery.ajax({
             method: "GET",
-            url: kp.api.apiHostUrl + "types?access_token=" + kp.data.storage.token.access_token,
+            url: _this.apiHostUrl + "types?access_token=" + _this._parent.data.storage.token.access_token,
         }).done(function(response) {
             if (response.status != 200) {
-                kp.log.add("API > getUser > Status Error " + response.status);
+                _this._parent.log.add("API > getUser > Status Error " + response.status);
                 return;
             } else {
-                kp.config.updateTypes(response.items);
+                _this._parent.config.updateTypes(response.items);
             }
         }).fail(function(jqXHR, textStatus, errorThrown) {
-            kp.log.add("API > getUnwatched > Ошибочка! " + textStatus);
+            _this._parent.log.add("API > getUnwatched > Ошибочка! " + textStatus);
         });
     }
 }
@@ -485,16 +503,20 @@ kp.api = {
  * Licensed under GPL-3.0 (https://github.com/ctepeo/KinoPub/blob/master/LICENSE)
  * ======================================================================== */
 kp.user = {
-    _init: function() {},
+    _parent: false,
+    _init: function(_parent) {
+        this._parent = _parent;
+        return this;
+    },
     getUser: function() {
-        kp.api.getUser();
+        this._parent.api.getUser();
     },
     // returns array with user's private menu items
     getUserNav: function() {
         var nav = [];
-        for (i in kp.config.menues.my) {
-            var item = kp.config.menues.my[i];
-            item.title = lang(item.lang);
+        for (i in this._parent.config.menues.my) {
+            var item = this._parent.config.menues.my[i];
+            item.title = this._parent.lang.get(item.lang);
             nav.push(item);
         }
         return nav;
@@ -503,10 +525,10 @@ kp.user = {
     getUserCategories: function() {
         var nav = [];
         // TODO -> provide user ability to change the items 
-        var source = kp.config.menues.categories;
+        var source = this._parent.config.menues.categories;
         for (i in source) {
             var item = source[i];
-            if (item.lang != false) item.title = lang(item.lang);
+            if (item.lang != false) item.title = this._parent.lang.get(item.lang);
             nav.push(item);
         }
         return nav;
@@ -517,19 +539,19 @@ kp.user = {
                 break;
             case 'serials':
                 var total = 0;
-                kp.data.storage.history.unwatched.serials = {};
+                this._parent.data.storage.history.unwatched.serials = {};
                 for (i in items) {
                     var item = items[i];
                     total = total + item.new, 10;
-                    kp.data.storage.history.unwatched.serials[item.id] = item;
+                    this._parent.data.storage.history.unwatched.serials[item.id] = item;
                 }
-                kp.data.storage.history.unwatched.total = total;
+                this._parent.data.storage.history.unwatched.total = total;
                 break;
             default:
-                kp.log.add('User > processUnwatched > Тип данных не найден > ' + type);
+                this._parent.log.add('User > processUnwatched > Тип данных не найден > ' + type);
                 break;
         }
-        kp.ui.updateUnwatched();
+        this._parent.ui.updateUnwatched();
     }
 }
 /* ========================================================================
@@ -541,8 +563,10 @@ kp.user = {
  * ======================================================================== */
 kp.ui = {
     _duration: 10,
-    _init: function() {
-        this._welcome();
+    _parent: false,
+    _init: function(_parent) {
+        this._parent = _parent;
+        return this._welcome();
     },
     _welcome: function() {
         var _this = this;
@@ -551,7 +575,7 @@ kp.ui = {
         jQuery(".kp-logo").animate({
             opacity: 1
         }, 15 * _this._duration).promise().then(function() {
-            if (!kp.auth.checkAccessToken()) {
+            if (!_this._parent.auth.checkAccessToken()) {
                 // move upper to provide space for status informer
                 jQuery(".kp-logo").animate({
                     marginTop: '-10%'
@@ -561,6 +585,7 @@ kp.ui = {
                 });
             }
         });
+        return _this;
     },
     _reset: function() {
         jQuery("body").html("");
@@ -579,22 +604,24 @@ kp.ui = {
     },
     // force device activation dialog
     deviceActivation: function() {
-        kp.log.add("UI > Интерфейс активации");
+        var _this = this;
+        this._parent.log.add("UI > Интерфейс активации");
         if (jQuery("#kp-device-activation").length) return false;
         this.removeLoaders();
-        kp.modules.transferControl('ui', 'activation');
+        this.modules.transferControl('ui', 'activation');
         jQuery("body").addClass("kp-blurred");
-        jQuery("body").append("<div id=\"kp-device-activation\"><div class=\"kp-device-activation-container\"><h3>" + lang('device_activation_header') + "</h3><div class=\"kp-device-activation-code\"></div></div></div>");
+        jQuery("body").append("<div id=\"kp-device-activation\"><div class=\"kp-device-activation-container\"><h3>" + this._parent.lang.get('device_activation_header') + "</h3><div class=\"kp-device-activation-code\"></div></div></div>");
         jQuery("#kp-device-activation").css({
-            width: kp.device.width + 'px',
-            height: kp.device.height + 'px'
+            width: _this._parent.device.width + 'px',
+            height: _this._parent.device.height + 'px'
         });
         this.setLoader(jQuery("#kp-device-activation .kp-device-activation-code"));
-        kp.auth.getDeviceCode();
+        this.auth.getDeviceCode();
     },
     // hide activation dialog
     deviceActivated: function() {
-        kp.log.add("UI > Скрываем интерфейс активации");
+        var _this = this;
+        _this._parent.log.add("UI > Скрываем интерфейс активации");
         jQuery("body").removeClass("kp-blurred");
         jQuery("#kp-device-activation").remove();
         var _this = this;
@@ -606,15 +633,15 @@ kp.ui = {
                 jQuery(".kp-logo").animate({
                     opacity: 0
                 }).promise().then(function() {
-                    kp.user.getUser();
+                    _this._parent.user.getUser();
                     jQuery(".kp-logo").remove();
                     jQuery("body").animate({
                         backgroundColor: '#2f373e'
                     }, 7 * _this._duration).promise().then(function() {
                         jQuery("body").removeClass("kp-welcome");
                         jQuery(".kp-logo, .kp-status").remove();
-                        kp.ui.drawLayout();
-                        kp.modules.transferControl('ui', 'homepage');
+                        _this.drawLayout();
+                        _this._parent.modules.transferControl('ui', 'homepage');
                     });
                 });
             });
@@ -622,44 +649,47 @@ kp.ui = {
     },
     // load html content from module/template to target block
     load: function(path, callback) {
+        var _this = this;
         jQuery.ajax({
             method: "GET",
-            url: kp.appPath + path + ".html"
+            url: _this._parent.appPath + path + ".html"
         }).done(function(response) {
             callback(response);
         }).fail(function(jqXHR, textStatus, errorThrown) {
-            kp.log.add("UI > Load > " + path + " (->" + target + ") >  Ошибочка! " + textStatus);
+            _this._parent.log.add("UI > Load > " + path + " (->" + target + ") >  Ошибочка! " + textStatus);
         });
     },
     drawLayout: function() {
+        var _this = this;
         if (!jQuery(".kp-header").length) {
             // build very basics
-            kp.ui.load("ui/_header", function(response) {
+            _this.load("ui/_header", function(response) {
                 jQuery("body").html(response);
                 //  set lang
-                kp.search._init();
+                _this._parent.search._init(_this._parent);
                 // update userinfo block
-                kp.ui.updateUserinfo();
+                _this._parent.ui.updateUserinfo();
                 // populate menues
-                var items = kp.user.getUserNav();
+                var items = _this._parent.user.getUserNav();
                 for (keyword in items) {
                     var item = items[keyword];
-                    jQuery(".kp-header .kp-my-categories ul").append(kp.ui.menuItem(item));
+                    jQuery(".kp-header .kp-my-categories ul").append(_this.menuItem(item));
                 }
-                kp.ui.drawMainNav();
+                _this.drawMainNav();
                 // get updates
-                kp.ui.getUnwatched();
+                _this.getUnwatched();
                 // load main screen
-                kp.modules.transferControl('grid', 'homepage');
+                _this._parent.modules.transferControl('grid', 'homepage');
             });
         }
     },
     drawMainNav: function() {
-        var categories = kp.user.getUserCategories();
+        var _this = this;
+        var categories = _this._parent.user.getUserCategories();
         jQuery(".kp-header .kp-main-categories ul > *").remove();
         for (keyword in categories) {
             var item = categories[keyword];
-            jQuery(".kp-header .kp-main-categories ul").append(kp.ui.menuItem(item));
+            jQuery(".kp-header .kp-main-categories ul").append(_this.menuItem(item));
         }
     },
     // returns HTML for menu item
@@ -673,15 +703,15 @@ kp.ui = {
     // updates i_watch element with the unwatched counter
     getUnwatched: function() {
         // get data
-        kp.api.getUnwatched();
+        this._parent.api.getUnwatched();
     },
     updateUnwatched: function() {
-        if (kp.data.storage.history.unwatched.total > 0) {
-            jQuery(".kp-top-bar .kp-my-categories ul li[data-kp-keyword='my_watched']").addClass("kp-notify");
-            if (jQuery(".kp-top-bar .kp-my-categories ul li.kp-notify .kp-my-notifications").length) {
-                jQuery(".kp-top-bar .kp-my-categories ul li.kp-notify .kp-my-notifications").html(kp.data.storage.history.unwatched.total);
+        if (this._parent.data.storage.history.unwatched.total > 0) {
+            jQuery(".kp-my-categories ul li[data-kp-keyword='my_watched']").addClass("kp-notify");
+            if (jQuery(".kp-my-categories ul li.kp-notify .kp-my-notifications").length) {
+                jQuery(".kp-my-categories ul li.kp-notify .kp-my-notifications").html(this._parent.data.storage.history.unwatched.total);
             } else {
-                jQuery(".kp-top-bar .kp-my-categories ul li.kp-notify a").append("<span class=\"kp-my-notifications\">" + kp.data.storage.history.unwatched.total + "</span>");
+                jQuery(".kp-my-categories ul li.kp-notify a").append("<span class=\"kp-my-notifications\">" + this._parent.data.storage.history.unwatched.total + "</span>");
             }
         } else {
             jQuery(".kp-top-bar .kp-my-categories ul li.kp-notify .kp-my-notification").remove();
@@ -690,21 +720,21 @@ kp.ui = {
     },
     // update userinfo block
     updateUserinfo: function() {
-        jQuery(".kp-userinfo .kp-userpic").prop("src", kp.data.storage.user.profile_avatar);
-        jQuery(".kp-userinfo .kp-username").html(kp.data.storage.user.username);
-        jQuery(".kp-userinfo .kp-user-pro-duration").text(kp.data.storage.user.subscription_days);
-        kp.log.add("UI > updateUserinfo > Обновлен UI");
+        jQuery(".kp-userinfo .kp-userpic").prop("src", this._parent.data.storage.user.profile_avatar);
+        jQuery(".kp-userinfo .kp-username").html(this._parent.data.storage.user.username);
+        jQuery(".kp-userinfo .kp-user-pro-duration").text(Math.round(this._parent.data.storage.user.subscription_days));
+        this._parent.log.add("UI > updateUserinfo > Обновлен UI");
     },
     // key mapping
     onGetControl: function(type) {
         var _this = this;
         switch (type) {
             case 'activation':
-                kp.device.registerKey(['ENTER'], function() {
-                    kp.api.getDeviceCode();
+                _this._parent.device.registerKey(['ENTER'], function() {
+                    _this._parent.api.getDeviceCode();
                 });
-                kp.device.registerEvent("#kp-device-activation .kp-device-activation-code h1", "dblclick", function() {
-                    kp.api.getDeviceCode();
+                _this._parent.device.registerEvent("#kp-device-activation .kp-device-activation-code h1", "dblclick", function() {
+                    _this._parent.api.getDeviceCode();
                 });
                 break;
             case 'homepage':
@@ -713,7 +743,7 @@ kp.ui = {
             case 'grid':
                 break;
             default:
-                kp.log.add("UI > onGetControl > Неизвестный тип [" + type + "]");
+                _this._parent.log.add("UI > onGetControl > Неизвестный тип [" + type + "]");
                 break;
         }
     }
@@ -726,64 +756,75 @@ kp.ui = {
  * Licensed under GPL-3.0 (https://github.com/ctepeo/KinoPub/blob/master/LICENSE)
  * ======================================================================== */
 kp.auth = {
+    _parent: false,
+    _init: function(_parent) {
+        this._parent = _parent;
+        return this;
+    },
     isAuthorized: function() {
         return this.hasAccessToken();
     },
     getDeviceCode: function() {
         if (this.hasDeviceCode()) {
-            kp.log.add("Auth > getDeviceCode > Device код уже есть");
+            this._parent.log.add("Auth > getDeviceCode > Device код уже есть");
             this.showDeviceCode();
         } else {
-            kp.data.wipe();
-            kp.log.add("Auth > getDeviceCode > Получаем новый device код");
-            kp.api.getDeviceCode();
+            this._parent.data.wipe();
+            this._parent.log.add("Auth > getDeviceCode > Получаем новый device код");
+            this._parent.api.getDeviceCode();
         }
     },
     // draws device code
     showDeviceCode: function() {
         var data = kp.data.storage.device;
-        jQuery("#kp-device-activation .kp-device-activation-code").html("<h1>" + data.user_code + "</h1><div class=\"kp-device-activation-bar\"></div><span>" + lang('device_activation_description') + "<strong>" + data.verification_uri + "</strong></span>");
-        kp.log.add("Auth > showDeviceCode > Отобразили код, запускаем таймеры");
+        jQuery("#kp-device-activation .kp-device-activation-code").html("<h1>" + data.user_code + "</h1><div class=\"kp-device-activation-bar\"></div><span>" + this._parent.lang.get('device_activation_description') + "<strong>" + data.verification_uri + "</strong></span>");
+        this._parent.log.add("Auth > showDeviceCode > Отобразили код, запускаем таймеры");
         this.deviceCodeBar();
         this.deviceCodeCheck();
     },
     deviceCodeCheck: function() {
-        if (typeof(kp.data.storage.device.intervalCodeChecks) == "undefined" || kp.data.storage.device.intervalCodeChecks == false) {
-            kp.data.storage.device.intervalCodeChecks = setInterval('kp.auth.deviceCodeCheck();', (kp.data.storage.device.interval * 1000));
+        var _this = this;
+        if (typeof(this._parent.data.storage.device.intervalCodeChecks) == "undefined" || this._parent.data.storage.device.intervalCodeChecks == false) {
+            this._parent.data.storage.device.intervalCodeChecks = setInterval(function() {
+                _this.deviceCodeCheck();
+            }, (this._parent.data.storage.device.interval * 1000));
         }
         if (this.hasDeviceCode() == false) {
             // re-create code
-            kp.log.add("Auth > deviceCodeCheck > Код протух, пора брать новый");
+            this._parent.log.add("Auth > deviceCodeCheck > Код протух, пора брать новый");
             this.getDeviceCode();
             return false;
         }
         // do check 
-        kp.api.checkDeviceCode();
+        this._parent.api.checkDeviceCode();
     },
     // remove all temp values
     cleanUpAfterGettingDeviceCode: function() {
-        kp.log.add("Auth > CleanUp > Удаляем временные данные");
-        clearInterval(kp.data.storage.device.intervalCodeChecks);
-        clearInterval(kp.data.storage.device.intervalProgressBar);
+        this._parent.log.add("Auth > CleanUp > Удаляем временные данные");
+        clearInterval(this._parent.data.storage.device.intervalCodeChecks);
+        clearInterval(this._parent.data.storage.device.intervalProgressBar);
         var fields = [];
-        for (i in kp.data.storage.device) {
-            var name = kp.data.storage.device[i];
+        for (i in this._parent.data.storage.device) {
+            var name = this._parent.data.storage.device[i];
             if (i != "name") fields.push(i);
         }
-        kp.data.remove('device', fields);
-        kp.ui.deviceActivated();
+        this._parent.data.remove('device', fields);
+        this._parent.ui.deviceActivated();
         // notify 
-        kp.api.notify();
+        this._parent.api.notify();
     },
     deviceCodeBar: function() {
-        if (typeof(kp.data.storage.device.intervalProgressBar) == "undefined" || kp.data.storage.device.intervalProgressBar == false) {
-            kp.data.storage.device.intervalProgressBar = setInterval('kp.auth.deviceCodeBar();', 300);
+        var _this = this;
+        if (typeof(this._parent.data.storage.device.intervalProgressBar) == "undefined" || this._parent.data.storage.device.intervalProgressBar == false) {
+            this._parent.data.storage.device.intervalProgressBar = setInterval(function() {
+                _this.deviceCodeBar();
+            }, 300);
         }
         if (!jQuery("#kp-device-activation .kp-device-activation-code .kp-device-activation-bar .progress-bar").length) {
             jQuery("#kp-device-activation .kp-device-activation-code .kp-device-activation-bar").html("<div class=\"progress\"><div class=\"progress-bar progress-bar-success progress-bar-striped active\" role=\"progressbar\" aria-valuenow=\"\" aria-valuemin=\"0\" aria-valuemax=\"\"></div></div>");
         }
         var progressBar = jQuery("#kp-device-activation .kp-device-activation-code .kp-device-activation-bar .progress-bar");
-        var currentProgress = ((this.deviceCodeExpiresIn() / kp.data.storage.device.expiry_interval) * 100).toFixed(2);
+        var currentProgress = ((this.deviceCodeExpiresIn() / this._parent.data.storage.device.expiry_interval) * 100).toFixed(2);
         progressBar.css({
             width: currentProgress + "%"
         });
@@ -793,20 +834,20 @@ kp.auth = {
     },
     // checks is device_code stored locally and it hasn't been expired
     hasDeviceCode: function() {
-        if (typeof(kp.data.storage.device.code) == "undefined" || !kp.data.storage.device.code) return false;
-        if ((jQuery.now() / 1000) > kp.data.storage.device.expire_in || this.deviceCodeExpiresIn() <= 0) return false;
-        kp.log.add("Auth > hasDeviceCode > Через " + this.deviceCodeExpiresIn() + " секунд девайс токен умрет");
+        if (typeof(this._parent.data.storage.device.code) == "undefined" || !this._parent.data.storage.device.code) return false;
+        if ((jQuery.now() / 1000) > this._parent.data.storage.device.expire_in || this.deviceCodeExpiresIn() <= 0) return false;
+        this._parent.log.add("Auth > hasDeviceCode > Через " + this.deviceCodeExpiresIn() + " секунд девайс токен умрет");
         return true;
     },
     // returns seconds to expiry of device code
     deviceCodeExpiresIn: function() {
-        return (parseInt(kp.data.storage.device.expires_in, 10) - parseInt((jQuery.now() / 1000), 10));
+        return (parseInt(this._parent.data.storage.device.expires_in, 10) - parseInt((jQuery.now() / 1000), 10));
     },
     checkAccessToken: function() {
-        kp.log.add("Auth > checkAccessToken > " + this.accessTokenExpiresIn());
+        this._parent.log.add("Auth > checkAccessToken > " + this.accessTokenExpiresIn());
         if (!this.hasAccessToken()) {
-            if (typeof(kp.data.storage.token.access_token) != "undefined" && kp.data.storage.token.access_token != null) {
-                kp.api.updateAccessToken();
+            if (typeof(this._parent.data.storage.token.access_token) != "undefined" && this._parent.data.storage.token.access_token != null) {
+                this._parent.api.updateAccessToken();
             }
             return false;
         } else {
@@ -815,14 +856,14 @@ kp.auth = {
     },
     // checks is access_token available and hasn't expired
     hasAccessToken: function() {
-        if (typeof(kp.data.storage.token.access_token) == "undefined" || !kp.data.storage.token.access_token) return false;
-        if ((jQuery.now() / 1000) > kp.data.storage.token.expires_in || this.accessTokenExpiresIn() <= 0) kp.api.updateAccessToken();
+        if (typeof(this._parent.data.storage.token.access_token) == "undefined" || !this._parent.data.storage.token.access_token) return false;
+        if ((jQuery.now() / 1000) > this._parent.data.storage.token.expires_in || this.accessTokenExpiresIn() <= 0) this._parent.api.updateAccessToken();
         return true;
     },
     // return seconds to expiry of access_token
     accessTokenExpiresIn: function() {
-        if (typeof(kp.data.storage.token) == "undefined" || typeof(kp.data.storage.token.expires_in) == "undefined" || kp.data.storage.token.expires_in == null) return 0;
-        return (parseInt(kp.data.storage.token.expires_in, 10) - parseInt((jQuery.now() / 1000), 10));
+        if (typeof(this._parent.data.storage.token) == "undefined" || typeof(this._parent.data.storage.token.expires_in) == "undefined" || this._parent.data.storage.token.expires_in == null) return 0;
+        return (parseInt(this._parent.data.storage.token.expires_in, 10) - parseInt((jQuery.now() / 1000), 10));
     }
 }
 /* ========================================================================
@@ -833,6 +874,11 @@ kp.auth = {
  * Licensed under GPL-3.0 (https://github.com/ctepeo/KinoPub/blob/master/LICENSE)
  * ======================================================================== */
 kp.config = {
+    _parent: false,
+    _init: function(_parent) {
+        this._parent = _parent;
+        return this;
+    },
     //  default menues' items
     menues: {
         // user's menu
@@ -907,7 +953,7 @@ kp.config = {
             method: 'picked',
             lang: 'nav_categories_picked'
         });
-        kp.config.menues.categories = nav;
+        this.menues.categories = nav;
     }
 }
 /* ========================================================================
@@ -917,55 +963,48 @@ kp.config = {
  * Copyright 2011-2017 Egor "ctepeo" Sazanovich.
  * Licensed under GPL-3.0 (https://github.com/ctepeo/KinoPub/blob/master/LICENSE)
  * ======================================================================== */
-
-
 kp.modules = {
-    onBoot: [
-        'data',
-        'device',
-        'ui',
-        'user',
-        'boot',
-        'grid'
-    ],
+    onBoot: ['log', 'lang', 'data', 'device', 'api', 'ui', 'auth', 'user', 'search', 'grid', 'boot'],
     controlledBy: false,
+    _parent: false,
     // load modules' defaults
-    _init: function() {
+    _init: function(_parent) {
+        this._parent = _parent;
         for (moduleID in this.onBoot) {
             this.load(this.onBoot[moduleID]);
         }
     },
     load: function(module) {
+        if (typeof(this._parent.log.add) != "undefined") {
+            this._parent.log.add("Modules > _init > Загрузка модуля " + module);
+        }
         if (typeof(kp[module]) == "undefined") {
-            kp.log.add("Modules > _init > Модуль не загружен ");
+            this._parent.log.add("Modules > _init > Модуль не загружен ");
             return;
         }
-        kp[module]._init();
-        if (typeof(kp.log) != "undefined") {
-            kp.log.add("Modules > _init > Загружен модуль " + module);
+        this._parent[module] = kp[module]._init(this._parent);
+        if (typeof(this._parent.log.add) != "undefined") {
+            this._parent.log.add("Modules > _init > Модуль " + module + " загружен");
         }
     },
     // cancels all keyboard/remote control handlers and sets to specified module (with params)
     transferControl: function(module, keyword) {
-        kp.log.add("Modules > Управление передано от " + this.controlledBy + " к " + module + "[" + keyword + "]")
+        this._parent.log.add("Modules > Управление передано от " + this.controlledBy + " к " + module + "[" + keyword + "]")
             // bye-bye to control?
-        if (this.controlledBy != false && typeof(kp[this.controlledBy]['onLostControl']) != "undefined")
-            kp[this.controlledBy].onLostControl();
+        if (this.controlledBy != false && typeof(this._parent[this.controlledBy]['onLostControl']) != "undefined") this._parent[this.controlledBy].onLostControl();
         // remove all handlers
         jQuery(document).off();
-        kp.device.keyHandlers = {};
-        kp.device.eventHandled = {};
+        this._parent.device.keyHandlers = {};
+        this._parent.device.eventHandled = {};
         // set default listeners
-        kp.device.defaultControls();
+        this._parent.device.defaultControls();
         // remember current module
         this.controlledBy = module;
         // callback
-        if (this.controlledBy != false && typeof(kp[module].onGetControl) != "undefined")
-            kp[this.controlledBy].onGetControl((typeof(keyword) != "undefined" ? keyword : false));
-        kp.device.setListeners();
+        if (this.controlledBy != false && typeof(this._parent[module].onGetControl) != "undefined") this._parent[this.controlledBy].onGetControl((typeof(keyword) != "undefined" ? keyword : false));
+        this._parent.device.setListeners();
     }
 }
-
 /* ========================================================================
  * KinoPub: kinopub.search.js v0.1
  * https://github.com/ctepeo/KinoPub/
@@ -974,8 +1013,11 @@ kp.modules = {
  * Licensed under GPL-3.0 (https://github.com/ctepeo/KinoPub/blob/master/LICENSE)
  * ======================================================================== */
 kp.search = {
-    _init: function() {
-        jQuery(".kp-top-bar .kp-top-searchbar .kp-searchbox").data("placeholder", lang('search_placeholder')).val(lang('search_placeholder'));
+    _parent: false,
+    _init: function(_parent) {
+        this._parent = _parent;
+        var _this = this;
+        jQuery(".kp-top-bar .kp-top-searchbar .kp-searchbox").data("placeholder", _this._parent.lang.get('search_placeholder')).val(_this._parent.lang.get('search_placeholder'));
         jQuery(".kp-top-bar").on("focus", ".kp-top-searchbar .kp-searchbox", function() {
             var input = jQuery(this);
             input.closest(".kp-top-searchbar").addClass("active");
@@ -990,6 +1032,7 @@ kp.search = {
                 input.val(input.data("placeholder"));
             };
         });
+        return this;
     }
 }
 /* ========================================================================
@@ -1000,18 +1043,26 @@ kp.search = {
  * Licensed under GPL-3.0 (https://github.com/ctepeo/KinoPub/blob/master/LICENSE)
  * ======================================================================== */
 kp.grid = {
-    _init: function() {},
-    _setLoader: function() {
-        jQuery(".kp-container").html("<div class=\"kp-loader\"><i class=\"fa fa-cog faa-spin animated\"></i></div>");
+    _parent: false,
+    _init: function(_parent) {
+        this._parent = _parent;
+        return this;
+    },
+    _setContainerLoader: function() {
+        jQuery(".kp-container").html("<div class=\"kp-loader\"><i class=\"fa fa-cog faa-spin animated vcenter centered\"></i></div>");
+        jQuery(".kp-container .kp-loader").css({
+            width: jQuery(".kp-container").outerWidth(true) + 'px',
+            height: jQuery(".kp-container").outerHeight(true) + 'px',
+        });
     },
     // workers
     onGetControl: function(type) {
         switch (type) {
             case 'homepage':
-                this._setLoader();
+                this._setContainerLoader();
                 break;
             default:
-                kp.log.add("Grid > " + type)
+                this._parent.log.add("Grid > " + type)
                 break;
         }
     }

@@ -13,29 +13,33 @@ kp.data = {
         user: ['profile_avatar', 'profile_name', 'reg_date', 'reg_unix', 'subscription_active', 'subscription_days', 'subscription_end_unix', 'subscription_end_date', 'username'],
         history: ['unwatched']
     },
+    _parent: false,
     storage: {},
-    _init: function() {
+    _init: function(_parent) {
+        this._parent = _parent;
         for (type in this.boot) {
             var fields = this.boot[type];
             this.restore(type, fields);
         }
+        return this;
     },
     restore: function(source, fields, prefix) {
+        var _this = this;
         if (typeof(prefix) == "undefined") prefix = "kp_";
-        if (typeof(kp.data.storage[source]) == "undefined") {
-            kp.data.storage[source] = {};
+        if (typeof(this.storage[source]) == "undefined") {
+            this.storage[source] = {};
         }
         for (i in fields) {
             var name = fields[i];
-            if (typeof(kp.data.storage[source][name]) == "undefined") {
-                kp.data.storage[source][name] = null;
+            if (typeof(this.storage[source][name]) == "undefined") {
+                this.storage[source][name] = null;
             }
             if (Cookies.get(prefix + source + '_' + name) != "") value = Cookies.get(prefix + source + '_' + name);
             if (value == null || value == false) {
-                kp.log.add("Data > Restore > Игнорируем значение [" + source + "/" + name + "]");
+                this._parent.log.add("Data > Restore > Игнорируем значение [" + source + "/" + name + "]");
             } else {
-                kp.log.add("Data > Restore > [" + source + "/" + name + "] => " + value);
-                kp.data.storage[source][name] = value;
+                this._parent.log.add("Data > Restore > [" + source + "/" + name + "] => " + value);
+                this.storage[source][name] = value;
             }
         }
     },
@@ -46,7 +50,7 @@ kp.data = {
             Cookies.set(prefix + type + '_' + name, value, {
                 expires: 180
             });
-            kp.data.storage[type][name] = value;
+            this.storage[type][name] = value;
         }
     },
     remove: function(type, fields, prefix) {
@@ -54,12 +58,12 @@ kp.data = {
         for (i in fields) {
             var name = fields[i];
             Cookies.remove(prefix + type + '_' + name);
-            kp.data.storage[type][name] = null;
+            this.storage[type][name] = null;
         }
     },
     wipe: function() {
         return false;
-        kp.log.add("Data > Wipe > Удаляем все сохраненные значения");
+        this._parent.log.add("Data > Wipe > Удаляем все сохраненные значения");
         for (type in this.boot) {
             var fields = this.boot[type];
             this.remove(type, fields);

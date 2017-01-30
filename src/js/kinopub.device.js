@@ -5,13 +5,15 @@
  * Copyright 2011-2017 Egor "ctepeo" Sazanovich.
  * Licensed under GPL-3.0 (https://github.com/ctepeo/KinoPub/blob/master/LICENSE)
  * ======================================================================== */
-
 kp.device = {
     width: false,
     height: false,
-    _init: function() {
+    _parent: false,
+    _init: function(_parent) {
+        this._parent = _parent;
         this.width = this.getWidth();
         this.height = this.getHeight();
+        return this;
     },
     getWidth: function() {
         return jQuery(document).width();
@@ -20,10 +22,10 @@ kp.device = {
         return jQuery(document).height();
     },
     widthPercent: function(percent) {
-        return Math.round(kp.tv.width * (0.01 * percent));
+        return Math.round(this.width * (0.01 * percent));
     },
     heightPercent: function(percent) {
-        return Math.round(kp.tv.height * (0.01 * percent));
+        return Math.round(this.height * (0.01 * percent));
     },
     keys: {
         // default Tizen TV keymap
@@ -65,9 +67,7 @@ kp.device = {
         PLAYPAUSE: 10252
     },
     // set default keys handlers
-    defaultControls: function() {
-
-    },
+    defaultControls: function() {},
     keyHandlers: {},
     eventHandled: {},
     registerKey: function(code, callback) {
@@ -79,25 +79,23 @@ kp.device = {
             return;
         }
         if (!isInt(code) && typeof(this.keys[code]) == "undefined") {
-            kp.log.add("Device > registerKey > Код не найден [" + code + "]");
+            this._parent.log.add("Device > registerKey > Код не найден [" + code + "]");
             return;
         }
-        if (!isInt(code))
-            code = this.keys[code];
+        if (!isInt(code)) code = this.keys[code];
         this.keyHandlers[code] = callback;
     },
     registerEvent: function(selector, event, callback) {
         var _this = this;
-        if (typeof(_this.eventHandled[selector]) == "undefined")
-            _this.eventHandled[selector] = {};
+        if (typeof(_this.eventHandled[selector]) == "undefined") _this.eventHandled[selector] = {};
         _this.eventHandled[selector][event] = callback;
         jQuery(document).on(event, selector, _this.eventHandled[selector][event]);
     },
     setListeners: function() {
         jQuery(document).on("keyup", function(e) {
-            if (typeof(kp.device.keyHandlers[e.which]) != "undefined") {
-                kp.log.add("Device > Кнопка #" + e.which);
-                kp.device.keyHandlers[e.which]();
+            if (typeof(this.keyHandlers[e.which]) != "undefined") {
+                _this._parent.log.add("Device > Кнопка #" + e.which);
+                this.keyHandlers[e.which]();
             }
         });
     }
