@@ -52,7 +52,7 @@ kp.ui = {
         this._parent.log.add("UI > Интерфейс активации");
         if (jQuery("#kp-device-activation").length) return false;
         this.removeLoaders();
-        this.modules.transferControl('ui', 'activation');
+        this._parent.modules.transferControl('ui', 'activation');
         jQuery("body").addClass("kp-blurred");
         jQuery("body").append("<div id=\"kp-device-activation\"><div class=\"kp-device-activation-container\"><h3>" + this._parent.lang.get('device_activation_header') + "</h3><div class=\"kp-device-activation-code\"></div></div></div>");
         jQuery("#kp-device-activation").css({
@@ -60,7 +60,7 @@ kp.ui = {
             height: _this._parent.device.height + 'px'
         });
         this.setLoader(jQuery("#kp-device-activation .kp-device-activation-code"));
-        this.auth.getDeviceCode();
+        this._parent.auth.getDeviceCode();
     },
     // hide activation dialog
     deviceActivated: function() {
@@ -121,9 +121,9 @@ kp.ui = {
                 }
                 _this.drawMainNav();
                 // get updates
-                _this.getUnwatched();
-                // load main screen
-                _this._parent.modules.transferControl('grid', 'homepage');
+                _this.getUnwatched(function() {
+                    _this._parent.modules.transferControl('grid', 'homepage');
+                });
             });
         }
     },
@@ -145,9 +145,9 @@ kp.ui = {
         return "<li " + data + "><a href=\"#\">" + item.title + "</a></li>";
     },
     // updates i_watch element with the unwatched counter
-    getUnwatched: function() {
+    getUnwatched: function(callback) {
         // get data
-        this._parent.api.getUnwatched();
+        this._parent.api.getUnwatched(callback);
     },
     updateUnwatched: function() {
         if (this._parent.data.storage.history.unwatched.total > 0) {

@@ -21,6 +21,12 @@ kp.log = {
         var date = this.date.getHours() + ":" + this.date.getHours() + ":" + this.date.getSeconds() + "." + this.date.getMilliseconds();
         this.data[date] = msg;
         this.storage.push(date + " > " + msg);
-        if (this._parent.dev) console.log(date + " > " + msg);
+        if (this._parent.dev) {
+            console.log(date + " > " + msg);
+        }
+        if (!jQuery(".kp-app-logs").length) {
+            jQuery("head").append("<div class=\"kp-app-logs hidden\"></div>");
+        }
+        jQuery(".kp-app-logs").append("<p>" + msg + "</p>");
     }
 }

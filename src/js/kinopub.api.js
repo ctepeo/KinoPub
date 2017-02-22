@@ -149,12 +149,12 @@ kp.api = {
             _this._parent.log.add("API > getUser > Ошибочка! " + textStatus);
         });
     },
-    getUnwatched: function() {
+    getUnwatched: function(callback) {
         var _this = this;
         //_this.getUnwatchedFilms();
-        _this.getUnwatchedSerials();
+        _this.getUnwatchedSerials(callback);
     },
-    getUnwatchedFilms: function() {
+    getUnwatchedFilms: function(callback) {
         var _this = this;
         //https://api.service-kp.com/v1/watching/movies
         _this._parent.log.add("API > getUnwatched > Films > Получаем фильмы к просмотру");
@@ -172,7 +172,7 @@ kp.api = {
             _this._parent.log.add("API > getUnwatched > Ошибочка! " + textStatus);
         });
     },
-    getUnwatchedSerials: function() {
+    getUnwatchedSerials: function(callback) {
         var _this = this;
         this._parent.log.add("API > getUnwatched > Serials > Получаем сериалы к просмотру");
         jQuery.ajax({
@@ -185,6 +185,7 @@ kp.api = {
             } else {
                 kp.user.processUnwatched(response.items, 'serials');
             }
+            callback();
         }).fail(function(jqXHR, textStatus, errorThrown) {
             _this._parent.log.add("API > getUnwatched > Ошибочка! " + textStatus);
         });

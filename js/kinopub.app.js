@@ -109,7 +109,13 @@ kp.log = {
         var date = this.date.getHours() + ":" + this.date.getHours() + ":" + this.date.getSeconds() + "." + this.date.getMilliseconds();
         this.data[date] = msg;
         this.storage.push(date + " > " + msg);
-        if (this._parent.dev) console.log(date + " > " + msg);
+        if (this._parent.dev) {
+            console.log(date + " > " + msg);
+        }
+        if (!jQuery(".kp-app-logs").length) {
+            jQuery("head").append("<div class=\"kp-app-logs hidden\"></div>");
+        }
+        jQuery(".kp-app-logs").append("<p>" + msg + "</p>");
     }
 }
 /* ========================================================================
@@ -278,10 +284,11 @@ kp.device = {
         jQuery(document).on(event, selector, _this.eventHandled[selector][event]);
     },
     setListeners: function() {
+        var _this = this;
         jQuery(document).on("keyup", function(e) {
-            if (typeof(this.keyHandlers[e.which]) != "undefined") {
+            if (typeof(_this.keyHandlers[e.which]) != "undefined") {
                 _this._parent.log.add("Device > Кнопка #" + e.which);
-                this.keyHandlers[e.which]();
+                _this.keyHandlers[e.which]();
             }
         });
     }
@@ -437,12 +444,12 @@ kp.api = {
             _this._parent.log.add("API > getUser > Ошибочка! " + textStatus);
         });
     },
-    getUnwatched: function() {
+    getUnwatched: function(callback) {
         var _this = this;
         //_this.getUnwatchedFilms();
-        _this.getUnwatchedSerials();
+        _this.getUnwatchedSerials(callback);
     },
-    getUnwatchedFilms: function() {
+    getUnwatchedFilms: function(callback) {
         var _this = this;
         //https://api.service-kp.com/v1/watching/movies
         _this._parent.log.add("API > getUnwatched > Films > Получаем фильмы к просмотру");
@@ -460,7 +467,7 @@ kp.api = {
             _this._parent.log.add("API > getUnwatched > Ошибочка! " + textStatus);
         });
     },
-    getUnwatchedSerials: function() {
+    getUnwatchedSerials: function(callback) {
         var _this = this;
         this._parent.log.add("API > getUnwatched > Serials > Получаем сериалы к просмотру");
         jQuery.ajax({
@@ -473,6 +480,7 @@ kp.api = {
             } else {
                 kp.user.processUnwatched(response.items, 'serials');
             }
+            callback();
         }).fail(function(jqXHR, textStatus, errorThrown) {
             _this._parent.log.add("API > getUnwatched > Ошибочка! " + textStatus);
         });
@@ -608,7 +616,7 @@ kp.ui = {
         this._parent.log.add("UI > Интерфейс активации");
         if (jQuery("#kp-device-activation").length) return false;
         this.removeLoaders();
-        this.modules.transferControl('ui', 'activation');
+        this._parent.modules.transferControl('ui', 'activation');
         jQuery("body").addClass("kp-blurred");
         jQuery("body").append("<div id=\"kp-device-activation\"><div class=\"kp-device-activation-container\"><h3>" + this._parent.lang.get('device_activation_header') + "</h3><div class=\"kp-device-activation-code\"></div></div></div>");
         jQuery("#kp-device-activation").css({
@@ -616,7 +624,7 @@ kp.ui = {
             height: _this._parent.device.height + 'px'
         });
         this.setLoader(jQuery("#kp-device-activation .kp-device-activation-code"));
-        this.auth.getDeviceCode();
+        this._parent.auth.getDeviceCode();
     },
     // hide activation dialog
     deviceActivated: function() {
@@ -677,9 +685,9 @@ kp.ui = {
                 }
                 _this.drawMainNav();
                 // get updates
-                _this.getUnwatched();
-                // load main screen
-                _this._parent.modules.transferControl('grid', 'homepage');
+                _this.getUnwatched(function() {
+                    _this._parent.modules.transferControl('grid', 'homepage');
+                });
             });
         }
     },
@@ -701,9 +709,9 @@ kp.ui = {
         return "<li " + data + "><a href=\"#\">" + item.title + "</a></li>";
     },
     // updates i_watch element with the unwatched counter
-    getUnwatched: function() {
+    getUnwatched: function(callback) {
         // get data
-        this._parent.api.getUnwatched();
+        this._parent.api.getUnwatched(callback);
     },
     updateUnwatched: function() {
         if (this._parent.data.storage.history.unwatched.total > 0) {
@@ -879,6 +887,12 @@ kp.config = {
         this._parent = _parent;
         return this;
     },
+    grid: {
+        // visible items per row
+        visibleItems: 8,
+        // max chars at tile's title
+        titleLen: 20
+    },
     //  default menues' items
     menues: {
         // user's menu
@@ -964,7 +978,7 @@ kp.config = {
  * Licensed under GPL-3.0 (https://github.com/ctepeo/KinoPub/blob/master/LICENSE)
  * ======================================================================== */
 kp.modules = {
-    onBoot: ['log', 'lang', 'data', 'device', 'api', 'ui', 'auth', 'user', 'search', 'grid', 'boot'],
+    onBoot: ['log', 'lang', 'data', 'device', 'api', 'ui', 'auth', 'user', 'search', 'grid', 'boot', 'cache'],
     controlledBy: false,
     _parent: false,
     // load modules' defaults
@@ -990,7 +1004,7 @@ kp.modules = {
     // cancels all keyboard/remote control handlers and sets to specified module (with params)
     transferControl: function(module, keyword) {
         this._parent.log.add("Modules > Управление передано от " + this.controlledBy + " к " + module + "[" + keyword + "]")
-            // bye-bye to control?
+        // bye-bye to control?
         if (this.controlledBy != false && typeof(this._parent[this.controlledBy]['onLostControl']) != "undefined") this._parent[this.controlledBy].onLostControl();
         // remove all handlers
         jQuery(document).off();
@@ -1044,6 +1058,7 @@ kp.search = {
  * ======================================================================== */
 kp.grid = {
     _parent: false,
+    grid: false,
     _init: function(_parent) {
         this._parent = _parent;
         return this;
@@ -1055,16 +1070,201 @@ kp.grid = {
             height: jQuery(".kp-container").outerHeight(true) + 'px',
         });
     },
+    _buildGrid: function(template) {
+        var _this = this;
+        if (typeof(template) != "string") {
+            _this._parent.log.add("Grid > _buildGrid > Шаблон не строка");
+        } else {
+            _this.grid = jQuery(template);
+        }
+    },
+    _showGrid: function() {
+        var _this = this;
+        jQuery(".kp-container").html(_this.grid);
+    },
+    addRow: function(items, title) {
+        var _this = this;
+        if (typeof(title) != "undefined") {
+            _this.grid.append("<div class=\"kp-grid-row kp-grid-row-title\"><h2>" + title + "</h2></div>");
+        }
+        _this.grid.append("<div class=\"kp-grid-row\" data-width=\"0\" data-height=\"0\" data-loaded=\"0\"><div class=\"kp-grid-row-container\">" + _this.addItems(items) + "</div></div>");
+        _this.grid.find(".kp-grid-row:last .kp-grid-item-poster").on("load", function() {
+            jQuery(this).addClass("kp-grid-item-poster-loaded");
+            _this.normalizeRow(jQuery(this));
+        });
+    },
+    // array to HTML
+    addItems: function(items) {
+        var html = "";
+        var _this = this;
+        for (i in items) {
+            html = html + _this.addItem(items[i]);
+        }
+        return html;
+    },
+    // item to HTML
+    addItem: function(item) {
+        var _this = this;
+        return ["<div class=\"kp-grid-item\">",
+            //
+            "<a href=\"#\">",
+            //
+            "<img class=\"kp-grid-item-poster\" src=\"" + _this._getImageSrc(item) + "\">",
+            //
+            "<div class=\"kp-grid-item-title\">" + _this.shortTitle(item.title) + "</div>", (typeof(item.notification) != "undefined" ?
+                // notification block
+                "<div class=\"kp-grid-item-notify\">" + item.notification + "</div>" :
+                // nothing here
+                ""),
+            //
+            "</a>", "</div>"
+        ].join("");
+    },
+    // normalize covers' heights
+    // 
+    // calculate average poster's size and set the size to all
+    // adapt posters to screen size
+    normalizeRow: function(loadedItem) {
+        return ;
+        var _this = this;
+        // averages
+        var ttlW = parseInt(loadedItem.closest(".kp-grid-row").data("width"), 10);
+        var ttlH = parseInt(loadedItem.closest(".kp-grid-row").data("height"), 10);
+        var ttlCnt = parseInt(loadedItem.closest(".kp-grid-row").data("loaded"), 10);
+        ttlW = ttlW + loadedItem.prop("naturalWidth");
+        ttlH = ttlH + loadedItem.prop("naturalHeight");
+        ttlCnt++;
+        var itemH = Math.ceil(ttlH / ttlCnt);
+        var itemW = Math.ceil(ttlW / ttlCnt);
+        // adapt to screen
+        var targetWidth = Math.ceil(_this._parent.device.width / _this._parent.config.grid.visibleItems);
+        // multiplier
+        var k = targetWidth / itemW;
+        itemH = Math.floor(itemH * k);
+        itemW = Math.floor(itemW * k);
+        loadedItem.closest(".kp-grid-row").find(".kp-grid-item").css({
+            margin: Math.ceil(itemW * 0.1) + 'px'
+        }).find(".kp-grid-item-poster").css({
+            width: Math.ceil(itemW) + 'px',
+            height: Math.ceil(itemH) + 'px',
+        });
+        console.log(itemW + "x" + itemH);
+        //console.log('cache image!');
+        //_this._parent.cache.cacheImage(loadedItem.prop('src'), "xxx");
+        loadedItem.css({
+            background: "url(" + loadedItem.prop('src') + ")",
+            backgroundSize: 'cover'
+        });
+        //loadedItem.removeProp("src").removeAttr("src");
+        if (loadedItem.closest(".kp-grid-row").find(".kp-grid-item-poster-loaded").length == ttlCnt) {
+            _this._setGridHandlers(loadedItem.closest(".kp-grid-row"));
+        }
+    },
+    //
+    _setGridHandlers: function(row) {},
+    // produce shorten title from full one for a tile
+    shortTitle: function(title) {
+        var _this = this;
+        // let's guess! 
+        if (title.indexOf(" / ")) {
+            title = title.split(" / ")[0];
+        }
+        if (title.length > _this._parent.config.grid.titleLen) return title.substr(0, _this._parent.config.grid.titleLen - 3) + "&hellip;";
+        return title;
+    },
+    // returns path to image
+    _getImageSrc: function(item) {
+        return item.poster.replace("https://", "http://");
+    },
     // workers
     onGetControl: function(type) {
+        var _this = this;
         switch (type) {
             case 'homepage':
                 this._setContainerLoader();
+                // load items
+                _this._parent.ui.load('ui/grid', function(template) {
+                    _this._buildGrid(template);
+                    _this.addRow(_this._extractUnwatched(_this._parent.data.storage.history.unwatched.serials), "Сериалы");
+                    _this._showGrid();
+                });
                 break;
             default:
                 this._parent.log.add("Grid > " + type)
                 break;
         }
+    },
+    // convert data from API responses to Grid
+    _extractUnwatched: function(data) {
+        var result = [];
+        for (i in data) {
+            var item = data[i];
+            result.push({
+                title: item.title,
+                id: item.id,
+                type: item.type,
+                subtype: item.subtype,
+                poster: item.posters.big,
+                notification: item.new
+            });
+        }
+        return result;
+    }
+}
+/* ========================================================================
+ * KinoPub: kinopub.cache.js v0.1
+ * https://github.com/ctepeo/KinoPub/
+ * ========================================================================
+ * Copyright 2011-2017 Egor "ctepeo" Sazanovich.
+ * Licensed under GPL-3.0 (https://github.com/ctepeo/KinoPub/blob/master/LICENSE)
+ * ======================================================================== */
+kp.cache = {
+    _parent: false,
+    _init: function(_parent) {
+        this._parent = _parent;
+        return this;
+    },
+    get: function(keyword) {
+        var _this = this;
+        _this._parent.log.add("Cache > Get [" + keyword + "]");
+        return localStorage.getItem(keyword);
+    },
+    set: function(keyword, data) {
+        var _this = this;
+        _this._parent.log.add("Cache > Set [" + keyword + "] \n " + data);
+        return localStorage.setItem(keyword, data);
+    },
+    remove: function(keyword) {
+        var _this = this;
+        _this._parent.log.add("Cache > Remove [" + keyword + "]");
+        localStorage.removeItem(keyword);
+    },
+    wipe: function() {
+        var _this = this;
+        _this._parent.log.add("Cache > Wipe!");
+        localStorage.clear();
+    },
+    cacheImage: function(url, keyword) {
+        var _this = this;
+        _this._parent.log.add("Cache > Image [" + keyword + " @ " + url + " ]");
+        _this._toBase64(url, function(base64encoded) {
+            _this.set(keyword, base64encoded)
+        });
+    },
+    _toBase64: function(url, callback) {
+        var _this = this;
+        var xhr = new XMLHttpRequest()
+        xhr.open("GET", url);
+        xhr.Origin = "https://kino.pub";
+        xhr.responseType = "blob";
+        xhr.send();
+        xhr.addEventListener("load", function() {
+            var reader = new FileReader();
+            reader.readAsDataURL(xhr.response);
+            reader.addEventListener("loadend", function() {
+                console.log(reader.result);
+            });
+        });
     }
 }
 /* ========================================================================

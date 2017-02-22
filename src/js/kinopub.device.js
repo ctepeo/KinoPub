@@ -92,10 +92,11 @@ kp.device = {
         jQuery(document).on(event, selector, _this.eventHandled[selector][event]);
     },
     setListeners: function() {
+        var _this = this;
         jQuery(document).on("keyup", function(e) {
-            if (typeof(this.keyHandlers[e.which]) != "undefined") {
+            if (typeof(_this.keyHandlers[e.which]) != "undefined") {
                 _this._parent.log.add("Device > Кнопка #" + e.which);
-                this.keyHandlers[e.which]();
+                _this.keyHandlers[e.which]();
             }
         });
     }

@@ -6,7 +6,7 @@
  * Licensed under GPL-3.0 (https://github.com/ctepeo/KinoPub/blob/master/LICENSE)
  * ======================================================================== */
 kp.modules = {
-    onBoot: ['log', 'lang', 'data', 'device', 'api', 'ui', 'auth', 'user', 'search', 'grid', 'boot'],
+    onBoot: ['log', 'lang', 'data', 'device', 'api', 'ui', 'auth', 'user', 'search', 'grid', 'boot', 'cache'],
     controlledBy: false,
     _parent: false,
     // load modules' defaults
@@ -32,7 +32,7 @@ kp.modules = {
     // cancels all keyboard/remote control handlers and sets to specified module (with params)
     transferControl: function(module, keyword) {
         this._parent.log.add("Modules > Управление передано от " + this.controlledBy + " к " + module + "[" + keyword + "]")
-            // bye-bye to control?
+        // bye-bye to control?
         if (this.controlledBy != false && typeof(this._parent[this.controlledBy]['onLostControl']) != "undefined") this._parent[this.controlledBy].onLostControl();
         // remove all handlers
         jQuery(document).off();

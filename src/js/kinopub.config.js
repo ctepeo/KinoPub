@@ -11,6 +11,12 @@ kp.config = {
         this._parent = _parent;
         return this;
     },
+    grid: {
+        // visible items per row
+        visibleItems: 8,
+        // max chars at tile's title
+        titleLen: 20
+    },
     //  default menues' items
     menues: {
         // user's menu

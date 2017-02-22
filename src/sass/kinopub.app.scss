@@ -163,6 +163,7 @@ body {
                         font-size: 0.5em;
                         font-weight: 800;
                         float: right;
+                        margin-right: 15px;
                         &:before {
                             @extend .fa;
                             @extend .fa-clock-o;
@@ -473,8 +474,92 @@ body {
             background: rgba($color-gray, 0.3);
             position: absolute;
             z-index: 10;
-            i{
+            i {
                 font-size: 5em;
+            }
+        }
+        /* GRID Styles */
+        .kp-grid {
+            display: block;
+            float: left;
+            margin: 2%;
+            margin-top: -100px;
+            width: 96%;
+            .kp-grid-row {
+                float: left;
+                width: 100%;
+                display: block;
+                &.kp-grid-row-title {
+                    h2 {
+                        font-weight: 800;
+                        font-size: 2em;
+                        margin-left: 1%;
+                    }
+                    display: block;
+                }
+                .kp-grid-row-container {
+                    float: left;
+                    overflow-x: hidden;
+                    width: 99999999999px;
+                    min-height: 150px;
+                    display: block;
+                    .kp-grid-item {
+                        -webkit-box-shadow: 0px 0px 40px 0px rgba(0, 0, 0, 0.8);
+                        -moz-box-shadow: 0px 0px 40px 0px rgba(0, 0, 0, 0.8);
+                        box-shadow: 0px 0px 40px 0px rgba(0, 0, 0, 0.8);
+                        float: left;
+                        min-width: 100px;
+                        min-height: 150px;
+                        display: block;
+                        a {
+                            float: left;
+                            position: relative;
+                            width: 100%;
+                            display: block;
+                            min-width: 100px;
+                            background-color: rgba($color-gray-darkest, 0.3);
+                            .kp-grid-item-poster {
+                                float: left;
+                                width: 100%;
+                                background-color: rgba($color-gray-darkest, 0.3);
+                                background-size: cover;
+                                max-width: 300px;
+                                min-width: 100px;
+                                min-height: 250px;
+                                &:before {
+                                    border: none;
+                                }
+                            }
+                            .kp-grid-item-title {
+                                position: absolute;
+                                bottom: 0px;
+                                width: 100%;
+                                font-size: 0.7em;
+                                padding: 5%;
+                                width: 100%;
+                                color: $color-white;
+                                background-color: rgba($color-black, 0.5);
+                                text-shadow: 1px 1px 1px rgba($color-black, 1);
+                                text-align: center;
+                            }
+                            .kp-grid-item-notify {
+                                position: absolute;
+                                top: -5%;
+                                text-align: center;
+                                vertical-align: middle;
+                                left: -5%;
+                                line-height: 50px;
+                                background-color: $brand-danger;
+                                color: $color-white;
+                                font-size: 1em;
+                                font-weight: bold;
+                                width: 50px;
+                                height: 50px;
+                                border-radius: 25px;
+                            }
+                        }
+                    }
+                }
             }
         }
     }

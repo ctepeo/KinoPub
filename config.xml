@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<widget xmlns="http://www.w3.org/ns/widgets" xmlns:tizen="http://tizen.org/ns/widgets" id="https://github.com/ctepeo/KinoPub" version="0.0.1" viewmodes="maximized">
-    <access origin="*" subdomains="true"/>
+<widget xmlns:tizen="http://tizen.org/ns/widgets" xmlns="http://www.w3.org/ns/widgets" id="https://github.com/ctepeo/KinoPub" version="0.0.1" viewmodes="maximized">
+    <access origin="*" subdomains="true"></access>
     <tizen:allow-navigation>*</tizen:allow-navigation>
-    <tizen:application id="N5N4M2tiE1.KINOPUB" package="N5N4M2tiE1" required_version="2.4"/>
+    <tizen:application id="N5N4M2tiE1.KINOPUB" package="N5N4M2tiE1" required_version="2.3"/>
     <author href="https://github.com/ctepeo/KinoPub" email="egor@prodev.io">Egor Sazanovich (ctepeo)</author>
     <content src="index.html"/>
     <tizen:content-security-policy>*</tizen:content-security-policy>
